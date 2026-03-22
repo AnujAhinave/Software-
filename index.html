@@ -1,138 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dr. Akanksha's Master Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
-        .day-card { background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 20px; overflow: hidden; }
-        .slot-pill { transition: all 0.2s; border: 2px solid transparent; font-weight: 800; text-transform: uppercase; font-size: 10px; padding: 8px 14px; border-radius: 50px; cursor: pointer; }
-        .available { background: #f8fafc; color: #64748b; border-color: #f1f5f9; }
-        .booked { background: #dcfce7; color: #166534; border-color: #22c55e; }
-        .blocked { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
-        .selected { border-color: #2563eb !important; background: #eff6ff !important; color: #1e40af !important; transform: scale(1.05); }
-        .tab-btn { flex: 1; padding: 15px; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; border-bottom: 3px solid transparent; }
-        .tab-active { color: #2563eb; border-color: #2563eb; background: white; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Clinic Pro Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { background: #ffffff; font-family: 'Inter', sans-serif; padding-bottom: 80px; }
+    .nav-active { color: #3b82f6; border-top: 3px solid #3b82f6; }
+    .row-item { border-bottom: 1px solid #f8f8f8; }
+    .time-pill { background: #f1f5f9; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .slot-card { border-radius: 12px; padding: 12px; text-align: center; border: 1px solid #eee; position: relative; }
+    .is-available { background: #f0fdf4; color: #166534; }
+    .is-blocked { background: #1e293b; color: white; }
+    .is-booked { background: #eff6ff; color: #1e40af; opacity: 0.6; }
+    .hidden { display: none; }
+  </style>
 </head>
-<body class="pb-32">
+<body>
 
-    <nav class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <h1 class="font-900 tracking-tighter text-blue-900 text-xl">PRO DASHBOARD</h1>
-        <button onclick="syncToCloud()" id="saveBtn" class="hidden bg-black text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Save Changes</button>
-    </nav>
-
-    <div class="flex bg-gray-50 border-b">
-        <button onclick="switchTab('sched')" id="btn-sched" class="tab-btn tab-active">Scheduler</button>
-        <button onclick="switchTab('ledger')" id="btn-ledger" class="tab-btn">Patient Ledger</button>
+  <nav class="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-50">
+    <h1 id="page-title" class="text-sm font-800 italic uppercase">Patients</h1>
+    <div class="flex gap-4">
+       <button onclick="showSmartPasteMenu()" class="text-blue-500 font-bold text-[10px] uppercase">Smart Paste</button>
+       <button onclick="location.reload()" class="text-gray-400">🔄</button>
     </div>
+  </nav>
 
-    <div id="app" class="p-4">
-        
-        <div class="flex gap-2 mb-6">
-            <select id="monthSelect" onchange="updateWeekList()" class="flex-1 p-3 rounded-xl border-none shadow-sm font-bold text-sm bg-white"></select>
-            <select id="weekSelect" onchange="fetchData()" class="flex-1 p-3 rounded-xl border-none shadow-sm font-bold text-sm bg-white"></select>
-        </div>
-
-        <div id="sched-view">
-            <div id="days-container"></div>
-        </div>
-
-        <div id="ledger-view" class="hidden">
-            <input type="text" placeholder="Search Patient Name or Phone..." class="w-full p-4 rounded-2xl border-none shadow-sm mb-4 font-semibold">
-            <div id="ledger-list"></div>
-        </div>
+  <div id="view-ledger" class="p-4">
+    <input type="text" id="searchBox" onkeyup="filterLedger(this.value)" placeholder="Search name..." class="w-full mb-4 p-2 border rounded-lg text-sm">
+    <div id="ledger-content" class="space-y-4">
+        <p class="text-center text-gray-400 py-10 text-xs uppercase font-bold">Loading Patients...</p>
     </div>
+  </div>
 
-    <div id="actionBar" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white border shadow-2xl rounded-full px-6 py-3 hidden flex items-center gap-6 z-50">
-        <button onclick="updateSlotStatus('Blocked')" class="text-[10px] font-black text-red-500 uppercase">Block</button>
-        <div class="w-px h-4 bg-gray-200"></div>
-        <button onclick="deleteSlot()" class="text-[10px] font-black text-gray-500 uppercase">Delete</button>
-        <div class="w-px h-4 bg-gray-200"></div>
-        <button onclick="updateSlotStatus('Available')" class="text-[10px] font-black text-blue-500 uppercase">Unblock</button>
+  <div id="view-schedule" class="p-4 hidden">
+    <div id="schedule-content" class="space-y-6">
+        <p class="text-center text-gray-400 py-10 text-xs uppercase font-bold">Loading Calendar...</p>
     </div>
+  </div>
 
-    <script>
-        const API_URL = "YOUR_SCRIPT_URL_HERE"; // PASTE YOUR GOOGLE WEB APP URL HERE
-        let localData = [];
-        let clipboard = [];
-        let currentTab = 'sched';
+  <div class="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around items-center h-16 z-50">
+    <button onclick="switchView('ledger')" id="btn-ledger" class="flex flex-col items-center gap-1 w-full pt-2 nav-active">
+      <span class="text-[10px] font-bold uppercase">Patients</span>
+    </button>
+    <button onclick="switchView('schedule')" id="btn-schedule" class="flex flex-col items-center gap-1 w-full pt-2 text-gray-400">
+      <span class="text-[10px] font-bold uppercase">Calendar</span>
+    </button>
+  </div>
 
-        // 1. GENERATE SELECTORS
-        function initSelectors() {
-            const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-            const select = document.getElementById('monthSelect');
-            months.forEach((m, i) => select.innerHTML += `<option value="${i}">${m}</option>`);
-            updateWeekList();
+  <script>
+    // --- CONFIGURATION ---
+    const API_URL = "PASTE_YOUR_GOOGLE_WEB_APP_URL_HERE"; 
+    let globalLedger = [];
+    let globalSchedule = [];
+    let clipboardPattern = [];
+
+    // --- DATA LOADING (FETCH FROM GOOGLE) ---
+    async function loadAllData() {
+        try {
+            const resLedger = await fetch(`${API_URL}?action=getAppointments`);
+            globalLedger = await resLedger.json();
+            renderLedger(globalLedger);
+
+            const resSched = await fetch(`${API_URL}?action=getMasterSchedule`);
+            globalSchedule = await resSched.json();
+            renderSchedule(globalSchedule);
+        } catch (e) {
+            console.error("Connection failed. Check your API URL and Permissions.");
         }
+    }
 
-        function updateWeekList() {
-            // Logic to populate weeks based on the selected month
-            // ... (Simplified for the demo)
-            fetchData();
-        }
+    // --- RENDER PATIENT LEDGER ---
+    function renderLedger(data) {
+      const container = document.getElementById('ledger-content');
+      container.innerHTML = data.map(item => `
+        <div class="row-item pb-4">
+          <div class="flex justify-between items-start">
+            <div class="w-2/3">
+              <p class="text-sm font-bold">${item['Name'] || 'No Name'}</p>
+              <div class="flex gap-2 mt-1">
+                <span class="time-pill">${item['Appt Time']}</span>
+                <a href="tel:${item['Phone']}" class="text-[10px] font-extrabold text-blue-500 uppercase">Call</a>
+                <a href="https://wa.me/91${item['Phone']}" class="text-[10px] font-extrabold text-green-500 uppercase">WA</a>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+              <input type="checkbox" class="w-4 h-4 rounded">
+              <button onclick="deleteAppt(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-bold text-red-300 uppercase tracking-tighter">Del</button>
+            </div>
+          </div>
+          <textarea onchange="saveNote(${item.rowNumber}, this.value)" class="w-full mt-2 text-xs text-gray-500 border-none p-0 focus:ring-0" placeholder="Notes...">${item['Description'] || ''}</textarea>
+        </div>
+      `).join('');
+    }
 
-        // 2. FETCH UNIFIED DATA (No Lag logic)
-        async function fetchData() {
-            const dates = "27/03/2026,28/03/2026,29/03/2026"; // Dynamic dates based on week selection
-            const response = await fetch(`${API_URL}?action=getAppData&dates=${dates}`);
-            localData = await response.json();
-            renderUI();
-        }
+    // --- RENDER SCHEDULER ---
+    function renderSchedule(data) {
+      const container = document.getElementById('schedule-content');
+      const grouped = data.reduce((acc, curr) => { (acc[curr.date] = acc[curr.date] || []).push(curr); return acc; }, {});
+      let html = '';
+      for (const date in grouped) {
+        const dayName = grouped[date][0].day || "";
+        html += `
+          <div class="flex justify-between items-center mt-6">
+            <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${date} (${dayName})</h2>
+            <button onclick="dayMenu('${date}')" class="text-blue-500 font-bold text-[10px]">OPTIONS</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+          ${grouped[date].map(s => `
+            <div onclick="toggleSlot(${s.rowNumber}, '${s.status}')" class="slot-card ${s.status === 'Available' ? 'is-available' : s.status === 'Booked' ? 'is-booked' : 'is-blocked'}">
+              <p class="text-xs font-bold">${s.time}</p>
+              <p class="text-[8px] uppercase font-bold opacity-60">${s.status}</p>
+            </div>
+          `).join('')}</div>`;
+      }
+      container.innerHTML = html;
+    }
 
-        // 3. RENDER DASHBOARDS
-        function renderUI() {
-            const container = document.getElementById('days-container');
-            const ledgerList = document.getElementById('ledger-list');
-            container.innerHTML = "";
-            ledgerList.innerHTML = "";
+    // --- UTILITIES ---
+    function switchView(view) {
+      document.getElementById('view-ledger').classList.toggle('hidden', view !== 'ledger');
+      document.getElementById('view-schedule').classList.toggle('hidden', view !== 'schedule');
+      document.getElementById('btn-ledger').classList.toggle('nav-active', view === 'ledger');
+      document.getElementById('btn-schedule').classList.toggle('nav-active', view === 'schedule');
+      document.getElementById('page-title').innerText = view === 'ledger' ? 'Patients' : 'Calendar';
+    }
 
-            // Group data by date
-            const grouped = localData.reduce((acc, slot) => {
-                acc[slot.date] = acc[slot.date] || [];
-                acc[slot.date].push(slot);
-                return acc;
-            }, {});
+    function filterLedger(val) {
+      const filtered = globalLedger.filter(i => i.Name.toLowerCase().includes(val.toLowerCase()));
+      renderLedger(filtered);
+    }
 
-            Object.keys(grouped).forEach(date => {
-                // Render Scheduler Card
-                container.innerHTML += `
-                    <div class="day-card">
-                        <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                            <span class="font-900 text-[11px] uppercase tracking-widest text-gray-400">${date}</span>
-                            <button onclick="showMenu('${date}')" class="text-gray-400 font-black">⋮</button>
-                        </div>
-                        <div class="p-4 flex flex-wrap gap-2">
-                            ${grouped[date].map(s => `<div class="slot-pill ${s.status.toLowerCase()}">${s.time}</div>`).join('')}
-                        </div>
-                    </div>
-                `;
-                
-                // Render Ledger List
-                grouped[date].filter(s => s.status === 'Booked').forEach(s => {
-                    ledgerList.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl mb-3 shadow-sm border-l-4 border-green-500">
-                            <div class="flex justify-between font-900 text-xs mb-1"><span>${s.patient.name}</span><span>${s.time}</span></div>
-                            <div class="text-[10px] text-gray-400 mb-2">${s.patient.phone}</div>
-                            <textarea class="w-full text-xs p-2 bg-gray-50 rounded-lg border-none" placeholder="Add treatment notes...">${s.patient.memo}</textarea>
-                        </div>
-                    `;
-                });
-            });
-        }
+    async function saveNote(row, val) {
+        await fetch(`${API_URL}?action=updateDescription&row=${row}&val=${encodeURIComponent(val)}`);
+    }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('sched-view').classList.toggle('hidden', tab !== 'sched');
-            document.getElementById('ledger-view').classList.toggle('hidden', tab !== 'ledger');
-            document.getElementById('btn-sched').classList.toggle('tab-active', tab === 'sched');
-            document.getElementById('btn-ledger').classList.toggle('tab-active', tab === 'ledger');
-        }
+    // START THE APP
+    window.onload = loadAllData;
 
-        window.onload = initSelectors;
-    </script>
+  </script>
 </body>
 </html>
