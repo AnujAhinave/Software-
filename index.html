@@ -447,41 +447,44 @@ async function loadAllData() {
     const data = await gasGet('?fetch=true');
 
     globalSchedule = data.slots || [];
-    globalLedger   = data.appointments || [];
+    let unsortedLedger = data.appointments || [];
 
-    // Build tags HTML
-    if (data.settings && data.settings.services && data.settings.services.length > 0) {
-      officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' +
-        data.settings.services.map(t => `<option value="${t}">${t}</option>`).join('');
-      document.getElementById('addService').innerHTML  = officialTagsHTML;
-      document.getElementById('editService').innerHTML = officialTagsHTML;
-    }
+    // --- NEW SORTING ENGINE ---
+    globalLedger = unsortedLedger.sort((a, b) => {
+      // 1. Create sortable date objects
+      const dateA = new Date(a['Appt Date']);
+      const dateB = new Date(b['Appt Date']);
+      
+      // 2. Compare Dates first
+      if (dateA - dateB !== 0) return dateA - dateB;
 
-    // Set current month selector to today's month
-    const nowMonth = new Date().getMonth();
-    document.getElementById('monthSelect').value      = nowMonth;
-    document.getElementById('copySourceMonth').value  = nowMonth;
+      // 3. If dates are same, compare Times
+      // Helper to turn "10:00 AM" into a sortable number
+      const getMinutes = (timeStr) => {
+        if (!timeStr) return 0;
+        const [time, modifier] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':');
+        hours = parseInt(hours);
+        if (hours === 12) hours = 0;
+        if (modifier === 'PM') hours += 12;
+        return (hours * 60) + parseInt(minutes);
+      };
 
+      return getMinutes(a['Appt Time']) - getMinutes(b['Appt Time']);
+    });
+    // --- END SORTING ENGINE ---
+
+    // Rest of your existing rendering code...
     renderLedger(globalLedger);
     filterSchedule();
-
+    
     document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('main-app').style.display       = 'block';
-
-    // Restore last active tab
-    const savedTab = sessionStorage.getItem('activeTab') || 'ledger';
-    switchView(savedTab);
+    document.getElementById('main-app').style.display = 'block';
 
   } catch(err) {
-    document.getElementById('loading-screen').innerHTML =
-      `<p style="color:red;font-size:12px;font-weight:900;text-transform:uppercase;padding:40px;text-align:center">
-        Failed to load data.<br><br>
-        <span style="font-weight:400;color:#666;font-size:10px">${err.message}</span><br><br>
-        <button onclick="location.reload()" style="background:#000;color:#fff;padding:12px 24px;border-radius:8px;font-weight:900;font-size:10px;text-transform:uppercase;cursor:pointer">Retry</button>
-      </p>`;
+    console.error("Sort failed", err);
   }
 }
-
 // ── LEDGER RENDERER ───────────────────────────────────────────────────
 // ── LEDGER RENDERER ───────────────────────────────────────────────────
 function renderLedger(data) {
