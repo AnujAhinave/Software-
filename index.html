@@ -1,183 +1,308 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    body { background: #ffffff; font-family: 'Inter', sans-serif; color: #1a1a1a; padding-bottom: 260px; width: 100%; overflow-x: hidden; }
-    .top-nav { border-bottom: 1px solid #f0f0f0; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 50; }
-    .nav-tab { padding-bottom: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a3a3a3; border-bottom: 3px solid transparent; cursor: pointer; }
-    .nav-tab.active { color: #000; border-bottom-color: #2563eb; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Coldvert Clinic Command</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ── BASE ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; font-family: 'Inter', sans-serif; color: #1a1a1a; padding-bottom: 280px; overflow-x: hidden; }
 
-    .slot-card { border-radius: 8px; padding: 12px 8px; border: 1px solid #d1d5db; cursor: pointer; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-    .state-available { background: #e5e7eb; color: #000; }
-    .state-booked { background: #22c55e; color: #fff; font-weight: 900; }
-    .state-blocked { background: #ef4444; color: #fff; font-weight: 900; }
-    .is-draft { border: 3px dashed #2563eb !important; background: #eff6ff; }
-    .is-draft.state-booked { background: #22c55e !important; color: #fff; }
-    .is-draft.state-blocked { background: #ef4444 !important; color: #fff; }
+  /* ── PIN SCREEN ───────────────────────────────── */
+  #pin-screen {
+    position: fixed; inset: 0; background: #000; z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+  }
+  .pin-logo { font-size: 11px; font-weight: 900; letter-spacing: .3em; text-transform: uppercase; color: #555; margin-bottom: 48px; }
+  .pin-title { font-size: 28px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: -.02em; margin-bottom: 8px; }
+  .pin-sub { font-size: 10px; font-weight: 700; color: #444; text-transform: uppercase; letter-spacing: .2em; margin-bottom: 40px; }
+  .pin-dots { display: flex; gap: 14px; margin-bottom: 40px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; background: #222; border: 2px solid #333; transition: all .2s; }
+  .pin-dot.filled { background: #2563eb; border-color: #2563eb; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 240px; }
+  .pin-btn {
+    background: #111; border: 1px solid #222; color: #fff;
+    border-radius: 16px; padding: 18px; font-size: 20px; font-weight: 800;
+    cursor: pointer; transition: all .15s; user-select: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .pin-btn:active { background: #1d4ed8; border-color: #2563eb; transform: scale(.95); }
+  .pin-btn .sub { font-size: 7px; letter-spacing: .15em; color: #555; margin-top: 2px; text-transform: uppercase; }
+  .pin-btn.del { background: #111; color: #ef4444; font-size: 16px; }
+  .pin-btn.empty { background: transparent; border: none; cursor: default; }
+  .pin-error { font-size: 10px; font-weight: 900; color: #ef4444; text-transform: uppercase; letter-spacing: .15em; margin-top: 24px; opacity: 0; transition: opacity .3s; }
+  .pin-error.show { opacity: 1; }
+  .pin-checking { font-size: 10px; font-weight: 900; color: #2563eb; text-transform: uppercase; letter-spacing: .15em; margin-top: 24px; }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
-    .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 24px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+  /* ── TOP NAV ──────────────────────────────────── */
+  .top-nav {
+    border-bottom: 1px solid #f0f0f0; padding: 1rem 1.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: white; z-index: 50;
+  }
+  .nav-tab { padding-bottom: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a3a3a3; border-bottom: 3px solid transparent; cursor: pointer; }
+  .nav-tab.active { color: #000; border-bottom-color: #2563eb; }
 
-    #syncBtn { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-    #syncBtn:disabled { background: #9ca3af !important; cursor: not-allowed; opacity: 0.7; }
-    
-    .picker-select { border: 2px solid #000; border-radius: 12px; padding: 10px; font-weight: 900; font-size: 16px; width: 100%; background: #f9f9f9; }
+  /* ── SLOT CARDS ───────────────────────────────── */
+  .slot-card { border-radius: 8px; padding: 12px 8px; border: 1px solid #d1d5db; cursor: pointer; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+  .state-available { background: #e5e7eb; color: #000; }
+  .state-booked    { background: #22c55e; color: #fff; font-weight: 900; }
+  .state-blocked   { background: #ef4444; color: #fff; font-weight: 900; }
+  .is-draft { border: 3px dashed #2563eb !important; background: #eff6ff; }
+  .is-draft.state-booked  { background: #22c55e !important; color: #fff; }
+  .is-draft.state-blocked { background: #ef4444 !important; color: #fff; }
 
-    .view-option { border: 2px solid #e5e7eb; border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.2s; text-align: left; }
-    .view-option.selected { border-color: #2563eb; background: #eff6ff; }
-    .view-option h4 { font-weight: 900; font-size: 14px; text-transform: uppercase; margin-bottom: 4px; }
-    .view-option p { font-size: 10px; color: #6b7280; font-weight: 600; }
+  /* ── MODALS ───────────────────────────────────── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+  .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 24px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,.5); }
+  .picker-select { border: 2px solid #000; border-radius: 12px; padding: 10px; font-weight: 900; font-size: 16px; width: 100%; background: #f9f9f9; }
+  .view-option { border: 2px solid #e5e7eb; border-radius: 16px; padding: 16px; cursor: pointer; transition: all .2s; }
+  .view-option.selected { border-color: #2563eb; background: #eff6ff; }
+  .view-option h4 { font-weight: 900; font-size: 14px; text-transform: uppercase; margin-bottom: 4px; }
+  .view-option p { font-size: 10px; color: #6b7280; font-weight: 600; }
 
-    @media (max-width: 640px) {
-      .hide-mobile { display: none; }
-      .name-section { grid-column: span 4; }
-      .notes-section { grid-column: span 3; padding-left: 8px; }
-      .edit-section { grid-column: span 1; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
-    }
-  </style>
+  /* ── SYNC BTN ─────────────────────────────────── */
+  #syncBtn { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,.4); white-space: nowrap; }
+  #syncBtn:disabled { background: #9ca3af !important; cursor: not-allowed; opacity: .7; }
+
+  /* ── LOADING ──────────────────────────────────── */
+  #loading-screen { position: fixed; inset: 0; background: #fff; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .loading-spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TABLE ────────────────────────────────────── */
+  .row-item { border-bottom: 1px solid #f3f4f6; }
+  .row-item:hover { background: #fafafa; }
+  .done-row { opacity: .4; }
+  .table-header { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #9ca3af; letter-spacing: .08em; }
+
+  /* ── MOBILE HELPERS ───────────────────────────── */
+  @media (max-width: 640px) {
+    .hide-mobile { display: none; }
+  }
+  textarea { resize: none; outline: none; }
+</style>
 </head>
 <body>
 
-  <button id="syncBtn" onclick="applySchedulerChanges()" class="hidden bg-blue-600 text-white font-900 px-12 py-5 rounded-full uppercase tracking-widest text-sm shadow-2xl">
-    <span id="syncText">💾 Sync Changes to Excel</span>
-  </button>
+<!-- ════════════════════════════════════════════════
+     PIN SCREEN
+════════════════════════════════════════════════ -->
+<div id="pin-screen">
+  <div class="pin-logo">Coldvert Clinic</div>
+  <div class="pin-title">Command Suite</div>
+  <div class="pin-sub">Enter Admin PIN</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2<span class="sub">ABC</span></button>
+    <button class="pin-btn" onclick="pinPress('3')">3<span class="sub">DEF</span></button>
+    <button class="pin-btn" onclick="pinPress('4')">4<span class="sub">GHI</span></button>
+    <button class="pin-btn" onclick="pinPress('5')">5<span class="sub">JKL</span></button>
+    <button class="pin-btn" onclick="pinPress('6')">6<span class="sub">MNO</span></button>
+    <button class="pin-btn" onclick="pinPress('7')">7<span class="sub">PQRS</span></button>
+    <button class="pin-btn" onclick="pinPress('8')">8<span class="sub">TUV</span></button>
+    <button class="pin-btn" onclick="pinPress('9')">9<span class="sub">WXYZ</span></button>
+    <div class="pin-btn empty"></div>
+    <button class="pin-btn" onclick="pinPress('0')">0</button>
+    <button class="pin-btn del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pinError">Incorrect PIN — Try Again</div>
+</div>
 
-  <div id="addModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 id="addDateTitle" class="text-[10px] font-900 uppercase text-blue-600 mb-6 tracking-widest">Set Appointment Time</h3>
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <select id="addH" class="picker-select"><option>01</option><option>02</option><option>03</option><option>04</option><option>05</option><option>06</option><option>07</option><option>08</option><option>09</option><option selected>10</option><option>11</option><option>12</option></select>
-        <select id="addM" class="picker-select"><option selected>00</option><option>05</option><option>10</option><option>15</option><option>20</option><option>30</option><option>45</option></select>
-        <select id="addP" class="picker-select"><option selected>AM</option><option>PM</option></select>
-      </div>
-      <select id="addService" class="w-full border-2 border-black p-4 rounded-xl font-900 uppercase mb-8 text-[11px] text-gray-700">
-        <option value="All">ALL TREATMENTS</option>
+<!-- ════════════════════════════════════════════════
+     LOADING SCREEN
+════════════════════════════════════════════════ -->
+<div id="loading-screen" style="display:none">
+  <div class="loading-spinner"></div>
+  <p style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.15em;color:#9ca3af">Loading Clinic Data...</p>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     SYNC BUTTON
+════════════════════════════════════════════════ -->
+<button id="syncBtn" onclick="applySchedulerChanges()" class="hidden bg-blue-600 text-white font-black px-12 py-5 rounded-full uppercase tracking-widest text-sm">
+  <span id="syncText">💾 Sync Changes</span>
+</button>
+
+<!-- ════════════════════════════════════════════════
+     ADD SLOT MODAL
+════════════════════════════════════════════════ -->
+<div id="addModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="addDateTitle" class="text-[10px] font-black uppercase text-blue-600 mb-6 tracking-widest">Add Slot</h3>
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <select id="addH" class="picker-select">
+        <option>01</option><option>02</option><option>03</option><option>04</option><option>05</option>
+        <option>06</option><option>07</option><option>08</option><option>09</option><option selected>10</option>
+        <option>11</option><option>12</option>
       </select>
-      <div class="flex gap-4">
-        <button onclick="closeModals()" class="flex-1 bg-gray-100 py-4 rounded-xl font-900 uppercase text-[10px]">Cancel</button>
-        <button onclick="saveBulkAdd()" class="flex-1 bg-black text-white py-4 rounded-xl font-900 uppercase text-[10px]">Add Slot</button>
-      </div>
+      <select id="addM" class="picker-select">
+        <option selected>00</option><option>05</option><option>10</option><option>15</option>
+        <option>20</option><option>30</option><option>45</option>
+      </select>
+      <select id="addP" class="picker-select"><option selected>AM</option><option>PM</option></select>
+    </div>
+    <select id="addService" class="w-full border-2 border-black p-4 rounded-xl font-black uppercase mb-8 text-[11px] text-gray-700">
+      <option value="All">ALL TREATMENTS</option>
+    </select>
+    <div class="flex gap-4">
+      <button onclick="closeModals()" class="flex-1 bg-gray-100 py-4 rounded-xl font-black uppercase text-[10px]">Cancel</button>
+      <button onclick="saveBulkAdd()" class="flex-1 bg-black text-white py-4 rounded-xl font-black uppercase text-[10px]">Add Slot</button>
     </div>
   </div>
+</div>
 
-  <div id="editModal" class="modal-overlay">
-    <div class="modal-content">
-      <h3 class="text-[10px] font-900 uppercase text-gray-400 mb-6 tracking-widest">Manage Slot</h3>
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <select id="editH" class="picker-select"><option>01</option><option>02</option><option>03</option><option>04</option><option>05</option><option>06</option><option>07</option><option>08</option><option>09</option><option>10</option><option>11</option><option>12</option></select>
-        <select id="editM" class="picker-select"><option>00</option><option>05</option><option>10</option><option>15</option><option>20</option><option>30</option><option>45</option></select>
-        <select id="editP" class="picker-select"><option>AM</option><option>PM</option></select>
-      </div>
-      <select id="editService" class="w-full border-2 border-black p-4 rounded-xl font-900 uppercase mb-4 text-[11px] text-gray-700">
-        <option value="All">ALL TREATMENTS</option>
+<!-- ════════════════════════════════════════════════
+     EDIT SLOT MODAL
+════════════════════════════════════════════════ -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 class="text-[10px] font-black uppercase text-gray-400 mb-6 tracking-widest">Manage Slot</h3>
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <select id="editH" class="picker-select">
+        <option>01</option><option>02</option><option>03</option><option>04</option><option>05</option>
+        <option>06</option><option>07</option><option>08</option><option>09</option><option>10</option>
+        <option>11</option><option>12</option>
       </select>
-      <select id="editStatusSelect" class="w-full border-2 border-black p-4 rounded-xl font-900 uppercase mb-8">
-        <option value="Available">Available (Grey)</option><option value="Booked">Booked (Green)</option><option value="Blocked">Blocked (Red)</option>
+      <select id="editM" class="picker-select">
+        <option>00</option><option>05</option><option>10</option><option>15</option>
+        <option>20</option><option>30</option><option>45</option>
       </select>
-      <button onclick="saveSlotEdit()" class="w-full bg-black text-white py-4 rounded-xl font-900 uppercase text-[10px] mb-3">Update Draft</button>
-      <div class="flex gap-3">
-        <button onclick="deleteSlotAction()" class="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-900 uppercase text-[9px]">Delete</button>
-        <button onclick="closeModals()" class="flex-1 bg-gray-100 py-3 rounded-xl font-900 uppercase text-[9px]">Cancel</button>
-      </div>
+      <select id="editP" class="picker-select"><option>AM</option><option>PM</option></select>
+    </div>
+    <select id="editService" class="w-full border-2 border-black p-4 rounded-xl font-black uppercase mb-4 text-[11px] text-gray-700">
+      <option value="All">ALL TREATMENTS</option>
+    </select>
+    <select id="editStatusSelect" class="w-full border-2 border-black p-4 rounded-xl font-black uppercase mb-8">
+      <option value="Available">Available (Grey)</option>
+      <option value="Booked">Booked (Green)</option>
+      <option value="Blocked">Blocked (Red)</option>
+    </select>
+    <button onclick="saveSlotEdit()" class="w-full bg-black text-white py-4 rounded-xl font-black uppercase text-[10px] mb-3">Update Draft</button>
+    <div class="flex gap-3">
+      <button onclick="deleteSlotAction()" class="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-black uppercase text-[9px]">Delete</button>
+      <button onclick="closeModals()" class="flex-1 bg-gray-100 py-3 rounded-xl font-black uppercase text-[9px]">Cancel</button>
     </div>
   </div>
+</div>
 
-  <div id="copyModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2 class="text-xl font-900 uppercase italic mb-8">Bulk Pattern Engine</h2>
-      <div class="space-y-6">
-        <div class="p-5 bg-blue-50 rounded-2xl border border-blue-100">
-          <p class="text-[10px] font-900 text-blue-600 uppercase mb-4 tracking-widest">1. Select Source Pattern</p>
-          <select id="copySourceMonth" class="w-full p-3 border-2 border-blue-200 rounded-xl font-900 text-[11px] uppercase mb-4">
-              <option value="0">January</option><option value="1">February</option><option value="2" selected>March</option>
-              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-          </select>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="text-[9px] font-900 uppercase text-gray-400 block mb-1">By Date</label><input type="number" id="copySourceDay" placeholder="Day" class="w-full p-3 border-2 border-blue-200 rounded-xl font-900 text-[11px] text-center" min="1" max="31"></div>
-            <div><label class="text-[9px] font-900 uppercase text-gray-400 block mb-1">OR By Week</label><select id="copySourceWeek" class="w-full p-3 border-2 border-blue-200 rounded-xl font-900 text-[11px] uppercase"><option value="">- SELECT -</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4+</option></select></div>
+<!-- ════════════════════════════════════════════════
+     BULK COPY MODAL
+════════════════════════════════════════════════ -->
+<div id="copyModal" class="modal-overlay">
+  <div class="modal-content">
+    <h2 class="text-xl font-black uppercase italic mb-8">Bulk Pattern Engine</h2>
+    <div class="space-y-6">
+      <div class="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+        <p class="text-[10px] font-black text-blue-600 uppercase mb-4 tracking-widest">1. Select Source Pattern</p>
+        <select id="copySourceMonth" class="w-full p-3 border-2 border-blue-200 rounded-xl font-black text-[11px] uppercase mb-4">
+          <option value="0">January</option><option value="1">February</option><option value="2" selected>March</option>
+          <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+          <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+        </select>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="text-[9px] font-black uppercase text-gray-400 block mb-1">By Date</label>
+            <input type="number" id="copySourceDay" placeholder="Day" class="w-full p-3 border-2 border-blue-200 rounded-xl font-black text-[11px] text-center" min="1" max="31">
+          </div>
+          <div><label class="text-[9px] font-black uppercase text-gray-400 block mb-1">OR By Week</label>
+            <select id="copySourceWeek" class="w-full p-3 border-2 border-blue-200 rounded-xl font-black text-[11px] uppercase">
+              <option value="">- SELECT -</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4+</option>
+            </select>
           </div>
         </div>
-        <div class="p-5 bg-red-50 rounded-2xl border border-red-100">
-          <p class="text-[10px] font-900 text-red-600 uppercase mb-4 tracking-widest">2. Auto-Nullify (Exceptions)</p>
-          <div class="grid grid-cols-4 gap-y-3 gap-x-2">
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="1"> Mon</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="2"> Tue</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="3"> Wed</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="4"> Thu</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="5"> Fri</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="6"> Sat</label>
-            <label class="text-[9px] font-900 uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="0"> Sun</label>
-          </div>
-        </div>
-        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200">
-          <p class="text-[10px] font-900 text-gray-500 uppercase mb-4 tracking-widest">3. Destination Target</p>
-          <select id="copyTargetMonth" class="w-full p-3 border-2 border-gray-300 rounded-xl font-900 text-[11px] uppercase mb-4">
-              <option value="0">January</option><option value="1">February</option><option value="2">March</option>
-              <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-              <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-              <option value="9">October</option><option value="10">November</option><option value="11">December</option>
-          </select>
-          <select id="copyTargetRange" class="w-full p-3 border-2 border-gray-300 rounded-xl font-900 text-[11px] uppercase"><option value="month">Entire Month</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4+</option></select>
+      </div>
+      <div class="p-5 bg-red-50 rounded-2xl border border-red-100">
+        <p class="text-[10px] font-black text-red-600 uppercase mb-4 tracking-widest">2. Skip These Days</p>
+        <div class="grid grid-cols-4 gap-y-3 gap-x-2">
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="1"> Mon</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="2"> Tue</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="3"> Wed</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="4"> Thu</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="5"> Fri</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="6"> Sat</label>
+          <label class="text-[9px] font-black uppercase flex items-center gap-1.5"><input type="checkbox" class="skip-day w-4 h-4" value="0"> Sun</label>
         </div>
       </div>
-      <button onclick="executeBulkCopy()" class="w-full mt-8 bg-black text-white py-5 rounded-2xl font-900 uppercase text-[12px] tracking-[0.2em] shadow-xl">⚡ Execute Pattern Blast</button>
-      <button onclick="closeModals()" class="w-full mt-4 text-gray-400 font-900 uppercase text-[9px] tracking-widest">Cancel</button>
+      <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200">
+        <p class="text-[10px] font-black text-gray-500 uppercase mb-4 tracking-widest">3. Destination</p>
+        <select id="copyTargetMonth" class="w-full p-3 border-2 border-gray-300 rounded-xl font-black text-[11px] uppercase mb-4">
+          <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+          <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+          <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+        </select>
+        <select id="copyTargetRange" class="w-full p-3 border-2 border-gray-300 rounded-xl font-black text-[11px] uppercase">
+          <option value="month">Entire Month</option><option value="1">Week 1</option><option value="2">Week 2</option><option value="3">Week 3</option><option value="4">Week 4+</option>
+        </select>
+      </div>
     </div>
+    <button onclick="executeBulkCopy()" class="w-full mt-8 bg-black text-white py-5 rounded-2xl font-black uppercase text-[12px] tracking-[.2em] shadow-xl">⚡ Execute Pattern Blast</button>
+    <button onclick="closeModals()" class="w-full mt-4 text-gray-400 font-black uppercase text-[9px] tracking-widest">Cancel</button>
   </div>
+</div>
 
-  <div id="viewModal" class="modal-overlay">
-    <div class="modal-content">
-      <h2 class="text-xl font-900 uppercase italic mb-2">Booking Window</h2>
-      <p class="text-[10px] text-gray-400 font-bold uppercase mb-8 tracking-widest">Control what patients see</p>
-      
-      <div class="space-y-3 mb-8">
-        <div id="opt-7" onclick="selectViewMode('7')" class="view-option selected">
-          <h4>Rolling 7 Days</h4>
-          <p>Shows slots for the next 1 week from today</p>
-        </div>
-        <div id="opt-14" onclick="selectViewMode('14')" class="view-option">
-          <h4>Rolling 14 Days</h4>
-          <p>Shows slots for the next 2 weeks from today</p>
-        </div>
-        <div id="opt-custom" onclick="selectViewMode('custom')" class="view-option">
-          <h4>Custom Date Range</h4>
-          <p>Pick a specific start and end date</p>
-          <div id="customInputs" class="hidden grid grid-cols-2 gap-2 mt-4">
-            <input type="date" id="customStart" class="border-2 border-black p-2 rounded-lg text-[10px] font-bold">
-            <input type="date" id="customEnd" class="border-2 border-black p-2 rounded-lg text-[10px] font-bold">
-          </div>
+<!-- ════════════════════════════════════════════════
+     PATIENT VIEW MODAL
+════════════════════════════════════════════════ -->
+<div id="viewModal" class="modal-overlay">
+  <div class="modal-content">
+    <h2 class="text-xl font-black uppercase italic mb-2">Booking Window</h2>
+    <p class="text-[10px] text-gray-400 font-bold uppercase mb-8 tracking-widest">Control what patients see</p>
+    <div class="space-y-3 mb-8">
+      <div id="opt-7" onclick="selectViewMode('7')" class="view-option selected">
+        <h4>Rolling 7 Days</h4><p>Shows slots for the next 1 week from today</p>
+      </div>
+      <div id="opt-14" onclick="selectViewMode('14')" class="view-option">
+        <h4>Rolling 14 Days</h4><p>Shows slots for the next 2 weeks from today</p>
+      </div>
+      <div id="opt-custom" onclick="selectViewMode('custom')" class="view-option">
+        <h4>Custom Date Range</h4><p>Pick a specific start and end date</p>
+        <div id="customInputs" class="hidden grid grid-cols-2 gap-2 mt-4">
+          <input type="date" id="customStart" class="border-2 border-black p-2 rounded-lg text-[10px] font-bold">
+          <input type="date" id="customEnd" class="border-2 border-black p-2 rounded-lg text-[10px] font-bold">
         </div>
       </div>
-
-      <button onclick="applyVisibility()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-900 uppercase text-[12px] tracking-[0.1em] shadow-xl">Apply Visibility Settings</button>
-      <button onclick="closeModals()" class="w-full mt-4 text-gray-400 font-900 uppercase text-[9px] tracking-widest">Cancel</button>
     </div>
+    <button onclick="applyVisibility()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase text-[12px] tracking-[.1em] shadow-xl">Apply Visibility Settings</button>
+    <button onclick="closeModals()" class="w-full mt-4 text-gray-400 font-black uppercase text-[9px] tracking-widest">Cancel</button>
   </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MAIN APP (hidden until PIN unlocked)
+════════════════════════════════════════════════ -->
+<div id="main-app" style="display:none">
 
   <nav class="top-nav">
-    <div class="flex items-center gap-8">
-      <h1 class="app-title italic font-900 uppercase tracking-tighter">Clinic Command</h1>
-      <div class="flex gap-6">
-        <button onclick="switchView('ledger')" id="tab-ledger" class="nav-tab active">Ledger</button>
+    <div class="flex items-center gap-6">
+      <h1 style="font-size:15px;font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:-.03em">Clinic Command</h1>
+      <div class="flex gap-5">
+        <button onclick="switchView('ledger')"   id="tab-ledger"   class="nav-tab active">Ledger</button>
         <button onclick="switchView('schedule')" id="tab-schedule" class="nav-tab">Slots</button>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <button id="viewBtn" onclick="openViewModal()" class="hidden bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-900 text-[10px] uppercase border border-blue-200">👁️ Patient View</button>
-      <button id="bulkCopyBtn" onclick="openCopyModal()" class="hidden bg-black text-white px-4 py-2 rounded-lg font-900 text-[10px] uppercase">📋 Bulk Copy</button>
-      
-      <input type="text" id="searchInput" onkeyup="filterList()" placeholder="Search Ledger..." class="border rounded-lg px-3 py-1.5 text-xs w-40 shadow-sm outline-none">
+    <div class="flex items-center gap-3 flex-wrap justify-end">
+      <button id="viewBtn"     onclick="openViewModal()" class="hidden bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-black text-[10px] uppercase border border-blue-200">👁️ Patient View</button>
+      <button id="bulkCopyBtn" onclick="openCopyModal()" class="hidden bg-black text-white px-4 py-2 rounded-lg font-black text-[10px] uppercase">📋 Bulk Copy</button>
+      <input type="text" id="searchInput" onkeyup="filterList()" placeholder="Search Ledger..." class="border rounded-lg px-3 py-1.5 text-xs w-36 shadow-sm outline-none">
     </div>
   </nav>
 
+  <!-- LEDGER VIEW -->
   <div id="view-ledger" class="w-full px-4 sm:px-10 py-6">
-    <div class="grid grid-cols-8 sm:grid-cols-12 px-2 py-3 table-header mb-1 bg-gray-50">
+    <div class="grid grid-cols-8 sm:grid-cols-12 px-2 py-3 table-header mb-1 bg-gray-50 rounded-lg">
       <div class="hide-mobile col-span-1">ID</div>
-      <div class="col-span-4 sm:col-span-3">Patient & Contact</div>
+      <div class="col-span-4 sm:col-span-3">Patient &amp; Contact</div>
       <div class="col-span-3 sm:col-span-4">Treatment Notes</div>
       <div class="hide-mobile col-span-2 text-center">Date</div>
       <div class="col-span-1 sm:col-span-2 text-right">Edit/Done</div>
@@ -185,255 +310,462 @@
     <div id="ledger-grid"></div>
   </div>
 
+  <!-- SCHEDULE VIEW -->
   <div id="view-schedule" class="hidden w-full px-4 sm:px-10 py-6">
     <div class="mb-8 flex flex-wrap justify-between items-center bg-gray-50 p-4 rounded-xl border gap-4">
-      <select id="monthSelect" onchange="filterSchedule()" class="border-2 border-black p-3 rounded-xl font-900 uppercase text-xs">
-          <option value="0">January</option><option value="1">February</option><option value="2" selected>March</option>
-          <option value="3">April</option><option value="4">May</option><option value="5">June</option>
-          <option value="6">July</option><option value="7">August</option><option value="8">September</option>
-          <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+      <select id="monthSelect" onchange="filterSchedule()" class="border-2 border-black p-3 rounded-xl font-black uppercase text-xs">
+        <option value="0">January</option><option value="1">February</option><option value="2" selected>March</option>
+        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
       </select>
-      
       <div class="flex items-center gap-2">
-          <input type="text" id="newTagInput" placeholder="New Treatment Name..." class="border-2 border-blue-200 p-2.5 rounded-xl font-bold uppercase text-[10px] w-48 outline-none">
-          <button onclick="createNewTag()" id="addTagBtn" class="bg-blue-600 text-white px-4 py-3 rounded-xl font-900 text-[10px] uppercase shadow">Add Tag</button>
+        <input type="text" id="newTagInput" placeholder="New Treatment..." class="border-2 border-blue-200 p-2.5 rounded-xl font-bold uppercase text-[10px] w-44 outline-none">
+        <button onclick="createNewTag()" id="addTagBtn" class="bg-blue-600 text-white px-4 py-3 rounded-xl font-black text-[10px] uppercase shadow">Add Tag</button>
       </div>
     </div>
-    
     <div id="schedule-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"></div>
   </div>
 
-  <script>
-    let globalLedger = [], globalSchedule = [], scheduleUpdates = [], scheduleAdds = [], scheduleDeletes = [];
-    let officialTagsHTML = '<option value="All">ALL TREATMENTS</option>';
-    const mNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    let currentAddDate = null, currentEditingRow = null;
-    let selectedMode = '7'; 
+</div><!-- /main-app -->
 
-    // --- INITIALIZATION ---
-    window.onload = () => {
-      // Memory Fix: Check which tab we were on before reload
-      const savedTab = sessionStorage.getItem('activeTab') || 'ledger';
-      switchView(savedTab);
+<!-- ════════════════════════════════════════════════
+     JAVASCRIPT ENGINE
+════════════════════════════════════════════════ -->
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────
+// ⚠️  PASTE YOUR APPS SCRIPT WEB APP URL HERE  ⚠️
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxP325x9hYifEtEpfHHbXC29yp5tKNUGR3W0VSw9ip18cR_DtePGtiADOyPDIlbQPVXLw/exec";
 
-      google.script.run.withSuccessHandler(renderLedger).getAppointments();
-      google.script.run.withSuccessHandler(d => { globalSchedule = d; filterSchedule(); }).getMasterSchedule();
-      
-      fetchAndUpdateTags();
-    };
+// ── STATE ────────────────────────────────────────────────────────────
+let globalLedger   = [];
+let globalSchedule = [];
+let scheduleUpdates = [], scheduleAdds = [], scheduleDeletes = [];
+let officialTagsHTML = '<option value="All">ALL TREATMENTS</option>';
+let currentAddDate   = null;
+let currentEditingRow = null;
+let selectedMode = '7';
+const mNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-    function fetchAndUpdateTags() {
-      google.script.run.withSuccessHandler(tags => {
-          if(tags && tags.length > 0) {
-              officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' + tags.map(t => `<option value="${t}">${t}</option>`).join('');
-              document.getElementById('addService').innerHTML = officialTagsHTML;
-              document.getElementById('editService').innerHTML = officialTagsHTML;
-              filterSchedule(); 
-          }
-      }).getOfficialTags();
+// ── PIN ENGINE ────────────────────────────────────────────────────────
+let pinBuffer = "";
+
+function pinPress(d) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += d;
+  updatePinDots();
+  if (pinBuffer.length === 4) verifyPin();
+}
+
+function pinDel() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pinError').classList.remove('show');
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+async function verifyPin() {
+  // Disable buttons while checking
+  document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = 'none');
+  const errEl = document.getElementById('pinError');
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+
+  // Show checking indicator
+  const checkEl = document.createElement('div');
+  checkEl.className = 'pin-checking';
+  checkEl.id = 'pinChecking';
+  checkEl.textContent = 'Verifying...';
+  document.getElementById('pin-screen').appendChild(checkEl);
+
+  try {
+    const res  = await fetch(`${GAS_URL}?checkPin=${pinBuffer}`);
+    const data = await res.json();
+
+    document.getElementById('pinChecking')?.remove();
+    document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = '');
+
+    if (data.isValid) {
+      unlockDashboard();
+    } else {
+      pinBuffer = "";
+      updatePinDots();
+      errEl.textContent = 'Incorrect PIN — Try Again';
+      errEl.classList.add('show');
+      // Shake animation
+      document.querySelector('.pin-pad').animate(
+        [{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(-6px)'},{transform:'translateX(0)'}],
+        {duration: 300}
+      );
+    }
+  } catch(e) {
+    document.getElementById('pinChecking')?.remove();
+    document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = '');
+    pinBuffer = "";
+    updatePinDots();
+    errEl.textContent = 'Network error — Check connection';
+    errEl.classList.add('show');
+  }
+}
+
+function unlockDashboard() {
+  document.getElementById('pin-screen').style.display   = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+  loadAllData();
+}
+
+// ── DATA LAYER ────────────────────────────────────────────────────────
+async function gasGet(params = '') {
+  const res = await fetch(`${GAS_URL}${params}`);
+  return res.json();
+}
+
+async function gasPost(payload) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+async function loadAllData() {
+  try {
+    const data = await gasGet('?fetch=true');
+
+    globalSchedule = data.slots || [];
+    globalLedger   = data.appointments || [];
+
+    // Build tags HTML
+    if (data.settings && data.settings.services && data.settings.services.length > 0) {
+      officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' +
+        data.settings.services.map(t => `<option value="${t}">${t}</option>`).join('');
+      document.getElementById('addService').innerHTML  = officialTagsHTML;
+      document.getElementById('editService').innerHTML = officialTagsHTML;
     }
 
-    // --- NEW: CREATING A NEW TAG DIRECTLY ---
-    function createNewTag() {
-        const input = document.getElementById('newTagInput');
-        const btn = document.getElementById('addTagBtn');
-        const val = input.value.trim();
-        if(!val) return;
-        
-        btn.innerText = "SAVING...";
-        btn.disabled = true;
-        
-        google.script.run.withSuccessHandler(() => {
-            input.value = "";
-            btn.innerText = "Add Tag";
-            btn.disabled = false;
-            fetchAndUpdateTags(); // Refresh the dropdowns automatically
-        }).addNewServiceTag(val);
-    }
+    // Set current month selector to today's month
+    const nowMonth = new Date().getMonth();
+    document.getElementById('monthSelect').value      = nowMonth;
+    document.getElementById('copySourceMonth').value  = nowMonth;
 
-    // --- PATIENT VIEW MODAL FUNCTIONS ---
-    function openViewModal() { document.getElementById('viewModal').style.display = 'flex'; }
-    
-    function selectViewMode(mode) {
-      selectedMode = mode;
-      document.querySelectorAll('.view-option').forEach(opt => opt.classList.remove('selected'));
-      document.getElementById('opt-' + mode).classList.add('selected');
-      document.getElementById('customInputs').classList.toggle('hidden', mode !== 'custom');
-    }
+    renderLedger(globalLedger);
+    filterSchedule();
 
-    function applyVisibility() {
-      const start = document.getElementById('customStart').value;
-      const end = document.getElementById('customEnd').value;
-      google.script.run.withSuccessHandler(() => {
-        alert("Visibility Updated Successfully!");
-        closeModals();
-      }).updateBookingWindow(selectedMode, start, end);
-    }
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('main-app').style.display       = 'block';
 
-    function renderLedger(data) {
-      document.getElementById('ledger-grid').innerHTML = data.map(item => `
-        <div id="row-${item.rowNumber}" class="grid grid-cols-8 sm:grid-cols-12 items-center px-2 py-5 row-item border-b border-gray-50">
-          <div class="hide-mobile col-span-1 text-[10px] font-medium text-gray-300">#${item.rowNumber}</div>
-          <div class="col-span-4 sm:col-span-3 text-left">
-            <p class="text-[12px] font-bold text-gray-900 uppercase mb-1 leading-none">${item['Name']}</p>
-            <div class="flex gap-4"><a href="tel:${item['Phone']}" class="text-blue-600 underline font-bold text-[9px] uppercase">Call</a><a href="https://wa.me/91${item['Phone']}" target="_blank" class="text-green-600 underline font-bold text-[9px] uppercase">WA</a></div>
-          </div>
-          <div class="col-span-3 sm:col-span-4 text-left"><textarea onchange="saveNote(${item.rowNumber}, this.value)" class="w-full bg-transparent border-none text-[11px] text-gray-500 p-0" rows="1">${item['Description'] || ''}</textarea></div>
-          <div class="hide-mobile col-span-2 text-center text-[10px] font-medium text-gray-600">${item['Appt Date']}</div>
-          <div class="col-span-1 sm:col-span-2 flex justify-end items-center gap-4"><input type="checkbox" onclick="markDone(${item.rowNumber})" class="w-4 h-4 rounded-lg accent-black"><button onclick="confirmDeleteLedger(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-900 text-red-400 uppercase">Del</button></div>
-        </div>`).join('');
-    }
+    // Restore last active tab
+    const savedTab = sessionStorage.getItem('activeTab') || 'ledger';
+    switchView(savedTab);
 
-    // --- SCHEDULE RENDERER ---
-    function filterSchedule() {
-      const mIdx = parseInt(document.getElementById('monthSelect').value);
-      const days = new Date(2026, mIdx + 1, 0).getDate();
-      let html = '';
-      
-      for (let d = 1; d <= days; d++) {
-        const dObj = new Date(2026, mIdx, d), dName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dObj.getDay()], dStr = `${d} ${mNames[mIdx]} 2026`;
-        const slots = globalSchedule.filter(s => s.date === dStr && !scheduleDeletes.includes(s.rowNumber));
-        const drafts = scheduleAdds.filter(s => s.date === dStr);
-        
-        html += `<div class="border-2 border-gray-100 p-6 rounded-3xl bg-white shadow-sm flex flex-col h-full">
-          <div class="flex justify-between items-start mb-4 border-b pb-3">
-            <div>
-                <p class="text-[9px] font-900 text-blue-600 uppercase tracking-widest">${dName}</p>
-                <h2 class="text-[11px] font-900 uppercase">${dStr}</h2>
-            </div>
-            <div class="flex flex-col items-end gap-2">
-                <button onclick="openAddModal('${dStr}')" class="bg-black text-white text-[8px] px-3 py-1.5 rounded-lg font-bold shadow">+ ADD SLOT</button>
-                <select onchange="tagEntireDay('${dStr}', this.value)" class="text-[7px] p-1.5 rounded border border-gray-300 uppercase font-bold text-gray-600 w-[85px] outline-none">
-                    <option value="">TAG DAY</option>
-                    ${officialTagsHTML}
-                </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 flex-grow">
-            ${slots.map(s => {
-              const up = scheduleUpdates.find(u => u.row === s.rowNumber);
-              const st = up ? up.status : s.status;
-              const sv = up ? up.service : s.service; 
-              const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
-              return `
-              <div onclick="openEditModal(${s.rowNumber}, '${up ? up.time : s.time}', '${st}', '${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
-                <p class="text-[11px] font-black uppercase">${up ? up.time : s.time}</p>
-                <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
-              </div>`;
-            }).join('')}
-            ${drafts.map(ds => `
-              <div class="slot-card is-draft state-available">
-                 <p class="text-[11px] font-black uppercase">${ds.time}</p>
-                 <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
-              </div>`).join('')}
-          </div>
-        </div>`;
-      }
-      document.getElementById('schedule-content').innerHTML = html;
-    }
+  } catch(err) {
+    document.getElementById('loading-screen').innerHTML =
+      `<p style="color:red;font-size:12px;font-weight:900;text-transform:uppercase;padding:40px;text-align:center">
+        Failed to load data.<br><br>
+        <span style="font-weight:400;color:#666;font-size:10px">${err.message}</span><br><br>
+        <button onclick="location.reload()" style="background:#000;color:#fff;padding:12px 24px;border-radius:8px;font-weight:900;font-size:10px;text-transform:uppercase;cursor:pointer">Retry</button>
+      </p>`;
+  }
+}
 
-    // --- DAY BULK TAGGER ---
-    function tagEntireDay(dateStr, serviceName) {
-        if (!serviceName) return;
-        const slots = globalSchedule.filter(s => s.date === dateStr);
-        slots.forEach(s => {
-            scheduleUpdates = scheduleUpdates.filter(u => u.row !== s.rowNumber);
-            scheduleUpdates.push({ row: s.rowNumber, time: s.time, status: s.status, service: serviceName });
-        });
-        scheduleAdds.forEach(a => { if (a.date === dateStr) a.service = serviceName; });
-        filterSchedule();
-        checkSaveStatus();
-    }
+// ── LEDGER RENDERER ───────────────────────────────────────────────────
+function renderLedger(data) {
+  if (!data || data.length === 0) {
+    document.getElementById('ledger-grid').innerHTML =
+      '<p style="text-align:center;padding:60px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase">No appointments found</p>';
+    return;
+  }
+  document.getElementById('ledger-grid').innerHTML = data.map(item => `
+    <div id="row-${item.rowNumber}" class="grid grid-cols-8 sm:grid-cols-12 items-center px-2 py-5 row-item">
+      <div class="hide-mobile col-span-1 text-[10px] font-medium text-gray-300">#${item.rowNumber}</div>
+      <div class="col-span-4 sm:col-span-3 text-left">
+        <p class="text-[12px] font-bold text-gray-900 uppercase mb-1 leading-none">${item['Name'] || item['firstName'] || '—'}</p>
+        <div class="flex gap-3">
+          <a href="tel:${item['Phone']}" class="text-blue-600 underline font-bold text-[9px] uppercase">Call</a>
+          <a href="https://wa.me/91${item['Phone']}" target="_blank" class="text-green-600 underline font-bold text-[9px] uppercase">WA</a>
+        </div>
+      </div>
+      <div class="col-span-3 sm:col-span-4 text-left">
+        <textarea
+          onchange="saveNote(${item.rowNumber}, this.value)"
+          class="w-full bg-transparent border-none text-[11px] text-gray-500 p-0"
+          rows="1"
+        >${item['Description'] || ''}</textarea>
+      </div>
+      <div class="hide-mobile col-span-2 text-center text-[10px] font-medium text-gray-600">${item['Appt Date'] || ''}</div>
+      <div class="col-span-1 sm:col-span-2 flex justify-end items-center gap-3">
+        <input type="checkbox" onclick="markDone(${item.rowNumber})" class="w-4 h-4 rounded accent-black">
+        <button onclick="confirmDeleteLedger(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-black text-red-400 uppercase">Del</button>
+      </div>
+    </div>`).join('');
+}
 
-    // --- ADD SLOT ---
-    function openAddModal(d) { 
-        currentAddDate = d; 
-        document.getElementById('addService').value = "All"; 
-        document.getElementById('addModal').style.display = 'flex'; 
-    }
-    
-    function saveBulkAdd() {
-      const h = document.getElementById('addH').value, m = document.getElementById('addM').value, p = document.getElementById('addP').value;
-      const s = document.getElementById('addService').value;
-      scheduleAdds.push({ date: currentAddDate, time: `${h}:${m} ${p}`, service: s });
-      filterSchedule(); checkSaveStatus(); closeModals();
-    }
-    
-    // --- EDIT SLOT ---
-    function openEditModal(row, time, status, service) {
-      currentEditingRow = row;
-      const p = time.match(/(\d+):(\d+)\s(AM|PM)/);
-      if(p) { document.getElementById('editH').value = p[1]; document.getElementById('editM').value = p[2]; document.getElementById('editP').value = p[3]; }
-      
-      document.getElementById('editStatusSelect').value = status;
-      const sSelect = document.getElementById('editService');
-      sSelect.value = service;
-      if (!sSelect.value) sSelect.value = "All";
+// ── SCHEDULE RENDERER ─────────────────────────────────────────────────
+function filterSchedule() {
+  const mIdx  = parseInt(document.getElementById('monthSelect').value);
+  const year  = new Date().getFullYear();
+  const days  = new Date(year, mIdx + 1, 0).getDate();
+  let html    = '';
 
-      document.getElementById('editModal').style.display = 'flex';
-    }
-    
-    function saveSlotEdit() {
-      const h = document.getElementById('editH').value, m = document.getElementById('editM').value, p = document.getElementById('editP').value;
-      const st = document.getElementById('editStatusSelect').value;
-      const sv = document.getElementById('editService').value;
+  for (let d = 1; d <= days; d++) {
+    const dObj   = new Date(year, mIdx, d);
+    const dName  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dObj.getDay()];
+    const dStr   = `${d} ${mNames[mIdx]} ${year}`;
 
-      scheduleUpdates = scheduleUpdates.filter(u => u.row !== currentEditingRow);
-      scheduleUpdates.push({ row: currentEditingRow, status: st, time: `${h}:${m} ${p}`, service: sv });
-      
-      filterSchedule(); checkSaveStatus(); closeModals();
-    }
+    const slots  = globalSchedule.filter(s => s.date === dStr && !scheduleDeletes.includes(s.rowNumber));
+    const drafts = scheduleAdds.filter(s => s.date === dStr);
 
-    function deleteSlotAction() {
-      if(!scheduleDeletes.includes(currentEditingRow)) scheduleDeletes.push(currentEditingRow);
-      filterSchedule(); checkSaveStatus(); closeModals();
-    }
+    html += `<div class="border-2 border-gray-100 p-6 rounded-3xl bg-white shadow-sm flex flex-col h-full">
+      <div class="flex justify-between items-start mb-4 border-b pb-3">
+        <div>
+          <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">${dName}</p>
+          <h2 class="text-[11px] font-black uppercase">${dStr}</h2>
+        </div>
+        <div class="flex flex-col items-end gap-2">
+          <button onclick="openAddModal('${dStr}')" class="bg-black text-white text-[8px] px-3 py-1.5 rounded-lg font-bold shadow">+ ADD SLOT</button>
+          <select onchange="tagEntireDay('${dStr}', this.value)" class="text-[7px] p-1.5 rounded border border-gray-300 uppercase font-bold text-gray-600 w-[85px] outline-none">
+            <option value="">TAG DAY</option>
+            ${officialTagsHTML}
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 flex-grow">
+        ${slots.map(s => {
+          const up = scheduleUpdates.find(u => u.row === s.rowNumber);
+          const st = up ? up.status  : s.status;
+          const sv = up ? up.service : s.service;
+          const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
+          return `<div onclick="openEditModal(${s.rowNumber},'${up ? up.time : s.time}','${st}','${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
+            <p class="text-[11px] font-black uppercase">${up ? up.time : s.time}</p>
+            <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
+          </div>`;
+        }).join('')}
+        ${drafts.map(ds => `
+          <div class="slot-card is-draft state-available">
+            <p class="text-[11px] font-black uppercase">${ds.time}</p>
+            <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
+          </div>`).join('')}
+        ${slots.length + drafts.length === 0 ? '<p class="col-span-2 text-[9px] text-gray-300 font-bold uppercase text-center py-4">No Slots</p>' : ''}
+      </div>
+    </div>`;
+  }
+  document.getElementById('schedule-content').innerHTML = html;
+}
 
-    // --- BULK COPY ENGINE ---
-    function openCopyModal() { document.getElementById('copyModal').style.display = 'flex'; }
+// ── DAY BULK TAGGER ───────────────────────────────────────────────────
+function tagEntireDay(dateStr, serviceName) {
+  if (!serviceName) return;
+  const slots = globalSchedule.filter(s => s.date === dateStr);
+  slots.forEach(s => {
+    scheduleUpdates = scheduleUpdates.filter(u => u.row !== s.rowNumber);
+    scheduleUpdates.push({ row: s.rowNumber, time: s.time, status: s.status, service: serviceName });
+  });
+  scheduleAdds.forEach(a => { if (a.date === dateStr) a.service = serviceName; });
+  filterSchedule();
+  checkSaveStatus();
+}
 
-    function executeBulkCopy() {
-      const srcM = parseInt(document.getElementById('copySourceMonth').value), srcD = parseInt(document.getElementById('copySourceDay').value), srcW = document.getElementById('copySourceWeek').value, tarM = parseInt(document.getElementById('copyTargetMonth').value), tarRange = document.getElementById('copyTargetRange').value;
-      const skipDays = Array.from(document.querySelectorAll('.skip-day:checked')).map(cb => parseInt(cb.value));
-      const daysInTarget = new Date(2026, tarM + 1, 0).getDate();
-      for (let d = 1; d <= daysInTarget; d++) {
-        const dObj = new Date(2026, tarM, d), weekNum = Math.ceil(d / 7);
-        if (skipDays.includes(dObj.getDay())) continue;
-        if (tarRange !== 'month' && parseInt(tarRange) !== weekNum) continue;
-        let pattern = [];
-        if (srcD) pattern = globalSchedule.filter(s => s.date === `${srcD} ${mNames[srcM]} 2026`);
-        else if (srcW) {
-          const srcD_in_week = ((parseInt(srcW)-1)*7) + (dObj.getDay() === 0 ? 7 : dObj.getDay());
-          pattern = globalSchedule.filter(s => s.date === `${srcD_in_week} ${mNames[srcM]} 2026`);
-        }
-        pattern.forEach(p => scheduleAdds.push({ date: `${d} ${mNames[tarM]} 2026`, time: p.time, service: p.service }));
-      }
-      filterSchedule(); checkSaveStatus(); closeModals();
-    }
+// ── ADD SLOT ──────────────────────────────────────────────────────────
+function openAddModal(d) {
+  currentAddDate = d;
+  document.getElementById('addService').value = "All";
+  document.getElementById('addModal').style.display = 'flex';
+}
 
-    // --- CORE MECHANICS ---
-    function applySchedulerChanges() {
-      const btn = document.getElementById('syncBtn'); btn.disabled = true; document.getElementById('syncText').innerText = "⏳ SAVING...";
-      google.script.run.withSuccessHandler(() => location.reload()).processBatchActions({ updates: scheduleUpdates, adds: scheduleAdds, slotDeletes: scheduleDeletes });
-    }
+function saveBulkAdd() {
+  const h = document.getElementById('addH').value;
+  const m = document.getElementById('addM').value;
+  const p = document.getElementById('addP').value;
+  const s = document.getElementById('addService').value;
+  scheduleAdds.push({ date: currentAddDate, time: `${h}:${m} ${p}`, service: s });
+  filterSchedule(); checkSaveStatus(); closeModals();
+}
 
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
-    function checkSaveStatus() { const t = scheduleUpdates.length + scheduleAdds.length + scheduleDeletes.length; document.getElementById('syncBtn').classList.toggle('hidden', t === 0); document.getElementById('syncText').innerText = `💾 Sync ${t} Changes to Excel`; }
-    
-    function switchView(v) {
-      sessionStorage.setItem('activeTab', v); // Memory fix: Remember the tab!
-      document.getElementById('view-ledger').classList.toggle('hidden', v !== 'ledger');
-      document.getElementById('view-schedule').classList.toggle('hidden', v !== 'schedule');
-      document.getElementById('bulkCopyBtn').classList.toggle('hidden', v !== 'schedule');
-      document.getElementById('viewBtn').classList.toggle('hidden', v !== 'schedule');
-      document.getElementById('tab-ledger').classList.toggle('active', v === 'ledger');
-      document.getElementById('tab-schedule').classList.toggle('active', v === 'schedule');
+// ── EDIT SLOT ─────────────────────────────────────────────────────────
+function openEditModal(row, time, status, service) {
+  currentEditingRow = row;
+  const p = time.match(/(\d+):(\d+)\s(AM|PM)/i);
+  if (p) {
+    document.getElementById('editH').value = p[1].padStart(2,'0');
+    document.getElementById('editM').value = p[2];
+    document.getElementById('editP').value = p[3].toUpperCase();
+  }
+  document.getElementById('editStatusSelect').value = status;
+  const sSelect = document.getElementById('editService');
+  sSelect.innerHTML = officialTagsHTML;
+  sSelect.value = service;
+  if (!sSelect.value) sSelect.value = "All";
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function saveSlotEdit() {
+  const h  = document.getElementById('editH').value;
+  const m  = document.getElementById('editM').value;
+  const p  = document.getElementById('editP').value;
+  const st = document.getElementById('editStatusSelect').value;
+  const sv = document.getElementById('editService').value;
+  scheduleUpdates = scheduleUpdates.filter(u => u.row !== currentEditingRow);
+  scheduleUpdates.push({ row: currentEditingRow, status: st, time: `${h}:${m} ${p}`, service: sv });
+  filterSchedule(); checkSaveStatus(); closeModals();
+}
+
+function deleteSlotAction() {
+  if (!scheduleDeletes.includes(currentEditingRow)) scheduleDeletes.push(currentEditingRow);
+  filterSchedule(); checkSaveStatus(); closeModals();
+}
+
+// ── BULK COPY ─────────────────────────────────────────────────────────
+function openCopyModal() { document.getElementById('copyModal').style.display = 'flex'; }
+
+function executeBulkCopy() {
+  const srcM      = parseInt(document.getElementById('copySourceMonth').value);
+  const srcD      = parseInt(document.getElementById('copySourceDay').value);
+  const srcW      = document.getElementById('copySourceWeek').value;
+  const tarM      = parseInt(document.getElementById('copyTargetMonth').value);
+  const tarRange  = document.getElementById('copyTargetRange').value;
+  const skipDays  = Array.from(document.querySelectorAll('.skip-day:checked')).map(cb => parseInt(cb.value));
+  const year      = new Date().getFullYear();
+  const daysInTarget = new Date(year, tarM + 1, 0).getDate();
+
+  for (let d = 1; d <= daysInTarget; d++) {
+    const dObj    = new Date(year, tarM, d);
+    const weekNum = Math.ceil(d / 7);
+    if (skipDays.includes(dObj.getDay())) continue;
+    if (tarRange !== 'month' && parseInt(tarRange) !== weekNum) continue;
+
+    let pattern = [];
+    if (srcD) {
+      pattern = globalSchedule.filter(s => s.date === `${srcD} ${mNames[srcM]} ${year}`);
+    } else if (srcW) {
+      const matchDay = (parseInt(srcW) - 1) * 7 + (dObj.getDay() === 0 ? 7 : dObj.getDay());
+      pattern = globalSchedule.filter(s => s.date === `${matchDay} ${mNames[srcM]} ${year}`);
     }
-    
-    function filterList() { const i = document.getElementById('searchInput').value.toLowerCase(); document.querySelectorAll('.row-item').forEach(r => { const n = r.querySelector('p').innerText.toLowerCase(); r.style.display = n.includes(i) ? "grid" : "none"; }); }
-    function markDone(n) { document.getElementById(`row-${n}`).classList.toggle('done-row'); }
-    function saveNote(r, v) { google.script.run.updateDescription(r, v); }
-    function confirmDeleteLedger(r, d, t) { if(confirm("Confirm: Delete patient?")) google.script.run.withSuccessHandler(() => location.reload()).deleteAppointment(r, d, t); }
-  </script>
+    pattern.forEach(p => scheduleAdds.push({ date: `${d} ${mNames[tarM]} ${year}`, time: p.time, service: p.service }));
+  }
+  filterSchedule(); checkSaveStatus(); closeModals();
+}
+
+// ── SYNC TO SHEETS ────────────────────────────────────────────────────
+async function applySchedulerChanges() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  document.getElementById('syncText').innerText = "⏳ SAVING...";
+  try {
+    await gasPost({ action: 'batchSchedule', updates: scheduleUpdates, adds: scheduleAdds, slotDeletes: scheduleDeletes });
+    scheduleUpdates = []; scheduleAdds = []; scheduleDeletes = [];
+    checkSaveStatus();
+    document.getElementById('syncText').innerText = "✅ Saved!";
+    // Reload fresh data silently
+    const data = await gasGet('?fetch=true');
+    globalSchedule = data.slots || [];
+    globalLedger   = data.appointments || [];
+    filterSchedule();
+    renderLedger(globalLedger);
+    setTimeout(() => { btn.disabled = false; checkSaveStatus(); }, 1500);
+  } catch(err) {
+    btn.disabled = false;
+    document.getElementById('syncText').innerText = "❌ Sync Failed — Retry";
+  }
+}
+
+// ── LEDGER ACTIONS ────────────────────────────────────────────────────
+function markDone(n) { document.getElementById(`row-${n}`).classList.toggle('done-row'); }
+
+async function saveNote(row, value) {
+  await gasPost({ action: 'updateNote', rowNumber: row, value: value });
+}
+
+async function confirmDeleteLedger(row, date, time) {
+  if (!confirm(`Delete patient record #${row}?\nDate: ${date} ${time}`)) return;
+  await gasPost({ action: 'deleteAppt', rowNumber: row, date, time });
+  globalLedger = globalLedger.filter(i => i.rowNumber !== row);
+  renderLedger(globalLedger);
+}
+
+// ── TAGS ──────────────────────────────────────────────────────────────
+async function createNewTag() {
+  const input = document.getElementById('newTagInput');
+  const btn   = document.getElementById('addTagBtn');
+  const val   = input.value.trim();
+  if (!val) return;
+
+  btn.innerText  = "SAVING...";
+  btn.disabled   = true;
+
+  await gasPost({ action: 'addTag', newTag: val });
+
+  // Refresh tags
+  const data = await gasGet('?fetch=true');
+  if (data.settings && data.settings.services) {
+    officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' +
+      data.settings.services.map(t => `<option value="${t}">${t}</option>`).join('');
+    document.getElementById('addService').innerHTML  = officialTagsHTML;
+    document.getElementById('editService').innerHTML = officialTagsHTML;
+  }
+  input.value   = "";
+  btn.innerText = "Add Tag";
+  btn.disabled  = false;
+  filterSchedule();
+}
+
+// ── PATIENT VIEW WINDOW ───────────────────────────────────────────────
+function openViewModal() { document.getElementById('viewModal').style.display = 'flex'; }
+
+function selectViewMode(mode) {
+  selectedMode = mode;
+  document.querySelectorAll('.view-option').forEach(opt => opt.classList.remove('selected'));
+  document.getElementById('opt-' + mode).classList.add('selected');
+  document.getElementById('customInputs').classList.toggle('hidden', mode !== 'custom');
+}
+
+async function applyVisibility() {
+  const start = document.getElementById('customStart').value;
+  const end   = document.getElementById('customEnd').value;
+  await gasPost({ action: 'updateWindow', mode: selectedMode, start, end });
+  alert("Visibility Updated Successfully!");
+  closeModals();
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────
+function closeModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+}
+
+function checkSaveStatus() {
+  const t = scheduleUpdates.length + scheduleAdds.length + scheduleDeletes.length;
+  const btn = document.getElementById('syncBtn');
+  btn.classList.toggle('hidden', t === 0);
+  document.getElementById('syncText').innerText = `💾 Sync ${t} Change${t !== 1 ? 's' : ''}`;
+}
+
+function switchView(v) {
+  sessionStorage.setItem('activeTab', v);
+  document.getElementById('view-ledger').classList.toggle('hidden', v !== 'ledger');
+  document.getElementById('view-schedule').classList.toggle('hidden', v !== 'schedule');
+  document.getElementById('bulkCopyBtn').classList.toggle('hidden', v !== 'schedule');
+  document.getElementById('viewBtn').classList.toggle('hidden', v !== 'schedule');
+  document.getElementById('tab-ledger').classList.toggle('active', v === 'ledger');
+  document.getElementById('tab-schedule').classList.toggle('active', v === 'schedule');
+  document.getElementById('searchInput').style.display = v === 'ledger' ? '' : 'none';
+}
+
+function filterList() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('.row-item').forEach(r => {
+    const name = r.querySelector('p')?.innerText.toLowerCase() || '';
+    r.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeModals(); });
+});
+</script>
 </body>
 </html>
