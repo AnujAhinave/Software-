@@ -333,6 +333,15 @@
      JAVASCRIPT ENGINE
 ════════════════════════════════════════════════ -->
 <script>
+  function formatTime12(timeStr) {
+  if (!timeStr) return '';
+  if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+  const [h, m] = timeStr.split(':');
+  let hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  return `${hour}:${m} ${ampm}`;
+}
 // ── CONFIG ──────────────────────────────────────────────────────────
 // ⚠️  PASTE YOUR APPS SCRIPT WEB APP URL HERE  ⚠️
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxQskOSKWGgPDGua3taWJw1wSuRzNMLxSkuXagRboMugwQZ5DG1ccpGluFRCKHvjgpqtA/exec";
@@ -474,6 +483,7 @@ async function loadAllData() {
 }
 
 // ── LEDGER RENDERER ───────────────────────────────────────────────────
+// ── LEDGER RENDERER ───────────────────────────────────────────────────
 function renderLedger(data) {
   if (!data || data.length === 0) {
     document.getElementById('ledger-grid').innerHTML =
@@ -497,7 +507,10 @@ function renderLedger(data) {
           rows="1"
         >${item['Description'] || ''}</textarea>
       </div>
-      <div class="hide-mobile col-span-2 text-center text-[10px] font-medium text-gray-600">${item['Appt Date'] || ''}</div>
+      <div class="hide-mobile col-span-2 text-center text-[10px] font-medium text-gray-600">
+        ${item['Appt Date'] || ''}<br>
+        <span class="text-[9px] text-blue-500 font-bold">${formatTime12(item['Appt Time'])}</span>
+      </div>
       <div class="col-span-1 sm:col-span-2 flex justify-end items-center gap-3">
         <input type="checkbox" onclick="markDone(${item.rowNumber})" class="w-4 h-4 rounded accent-black">
         <button onclick="confirmDeleteLedger(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-black text-red-400 uppercase">Del</button>
@@ -534,24 +547,31 @@ function filterSchedule() {
           </select>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3 flex-grow">
-        ${slots.map(s => {
-          const up = scheduleUpdates.find(u => u.row === s.rowNumber);
-          const st = up ? up.status  : s.status;
-          const sv = up ? up.service : s.service;
-          const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
-          return `<div onclick="openEditModal(${s.rowNumber},'${up ? up.time : s.time}','${st}','${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
-            <p class="text-[11px] font-black uppercase">${up ? up.time : s.time}</p>
-            <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
-          </div>`;
-        }).join('')}
-        ${drafts.map(ds => `
-          <div class="slot-card is-draft state-available">
-            <p class="text-[11px] font-black uppercase">${ds.time}</p>
-            <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
-          </div>`).join('')}
-        ${slots.length + drafts.length === 0 ? '<p class="col-span-2 text-[9px] text-gray-300 font-bold uppercase text-center py-4">No Slots</p>' : ''}
-      </div>
+     <div class="grid grid-cols-2 gap-3 flex-grow">
+  ${slots.map(s => {
+    const up = scheduleUpdates.find(u => u.row === s.rowNumber);
+    const st = up ? up.status : s.status;
+    const sv = up ? up.service : s.service;
+    
+    // Select the time from the update draft if it exists, otherwise use the original
+    const rawTime = up ? up.time : s.time;
+    
+    const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
+    
+    return `<div onclick="openEditModal(${s.rowNumber},'${rawTime}','${st}','${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
+      <p class="text-[11px] font-black uppercase">${formatTime12(rawTime)}</p>
+      <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
+    </div>`;
+  }).join('')}
+  
+  ${drafts.map(ds => `
+    <div class="slot-card is-draft state-available">
+       <p class="text-[11px] font-black uppercase">${formatTime12(ds.time)}</p>
+       <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
+    </div>`).join('')}
+    
+  ${slots.length + drafts.length === 0 ? '<p class="col-span-2 text-[9px] text-gray-300 font-bold uppercase text-center py-4">No Slots</p>' : ''}
+</div>
     </div>`;
   }
   document.getElementById('schedule-content').innerHTML = html;
