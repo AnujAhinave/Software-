@@ -487,21 +487,34 @@ async function loadAllData() {
 }
 // ── LEDGER RENDERER ───────────────────────────────────────────────────
 // ── LEDGER RENDERER ───────────────────────────────────────────────────
+// ── LEDGER RENDERER ───────────────────────────────────────────────────
+// ── LEDGER RENDERER ───────────────────────────────────────────────────
 function renderLedger(data) {
   if (!data || data.length === 0) {
     document.getElementById('ledger-grid').innerHTML =
       '<p style="text-align:center;padding:60px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase">No appointments found</p>';
     return;
   }
-  document.getElementById('ledger-grid').innerHTML = data.map(item => `
+  document.getElementById('ledger-grid').innerHTML = data.map(item => {
+    
+    // Logic for the Service Tag (Column G)
+    const serviceName = item['Service'] || 'ALL';
+    const serviceTag = `<span style="display:inline-block;background:#f3f4f6;color:#4b5563;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;text-transform:uppercase;margin-left:5px;border:1px solid #e5e7eb;vertical-align:middle">${serviceName}</span>`;
+
+    return `
     <div id="row-${item.rowNumber}" class="grid grid-cols-8 sm:grid-cols-12 items-center px-2 py-5 row-item">
       <div class="hide-mobile col-span-1 text-[10px] font-medium text-gray-300">#${item.rowNumber}</div>
       <div class="col-span-4 sm:col-span-3 text-left">
-        <p class="text-[12px] font-bold text-gray-900 uppercase mb-1 leading-none">${item['Name'] || item['firstName'] || '—'}</p>
+        <p class="text-[12px] font-bold text-gray-900 uppercase mb-1 leading-none">
+          ${item['Name'] || item['firstName'] || '—'} 
+          ${serviceTag}
+        </p>
         <div class="flex gap-3">
           <a href="tel:${item['Phone']}" class="text-blue-600 underline font-bold text-[9px] uppercase">Call</a>
           <a href="https://wa.me/91${item['Phone']}" target="_blank" class="text-green-600 underline font-bold text-[9px] uppercase">WA</a>
         </div>
+        
+        
       </div>
       <div class="col-span-3 sm:col-span-4 text-left">
         <textarea
@@ -518,8 +531,11 @@ function renderLedger(data) {
         <input type="checkbox" onclick="markDone(${item.rowNumber})" class="w-4 h-4 rounded accent-black">
         <button onclick="confirmDeleteLedger(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-black text-red-400 uppercase">Del</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
+
+
 
 // ── SCHEDULE RENDERER ─────────────────────────────────────────────────
 function filterSchedule() {
