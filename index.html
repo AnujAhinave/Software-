@@ -6,6 +6,7 @@
 <title>Coldvert Clinic Command</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   /* ── BASE ─────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,17 +74,252 @@
   .loading-spinner { width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #2563eb; border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── TABLE ────────────────────────────────────── */
-  .row-item { border-bottom: 1px solid #f3f4f6; }
-  .row-item:hover { background: #fafafa; }
-  .done-row { opacity: .4; }
-  .table-header { font-size: 9px; font-weight: 900; text-transform: uppercase; color: #9ca3af; letter-spacing: .08em; }
-
-  /* ── MOBILE HELPERS ───────────────────────────── */
-  @media (max-width: 640px) {
-    .hide-mobile { display: none; }
-  }
   textarea { resize: none; outline: none; }
+
+  /* ════════════════════════════════════════════════
+     NEW LEDGER STYLES
+  ════════════════════════════════════════════════ */
+  :root {
+    --lg-bg:          #F5F4F1;
+    --lg-surface:     #FFFFFF;
+    --lg-border:      #E4E2DC;
+    --lg-border-mid:  #D0CDC4;
+    --lg-text-1:      #18170F;
+    --lg-text-2:      #6A6860;
+    --lg-text-3:      #A8A59D;
+    --lg-blue:        #2355D4;
+    --lg-blue-bg:     #EEF2FC;
+    --lg-green:       #15803D;
+    --lg-green-bg:    #ECFDF5;
+    --lg-red:         #C8292E;
+    --lg-red-bg:      #FEF0F0;
+    --lg-men-bg:      #18170F;
+    --lg-men-fg:      #FFFFFF;
+    --lg-women-bg:    #FDF1F6;
+    --lg-women-fg:    #9B1756;
+    --lg-women-bd:    #F0ABCA;
+    --lg-other-bg:    #EFF7FF;
+    --lg-other-fg:    #1757A0;
+    --lg-other-bd:    #BFDBFE;
+  }
+
+  /* Ledger wrapper */
+  #view-ledger {
+    background: var(--lg-bg);
+    min-height: calc(100vh - 64px);
+    padding: 20px 16px 60px;
+  }
+
+  .lg-topbar {
+    max-width: 1080px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  /* Stats chips */
+  .lg-chips { max-width: 1080px; margin: 0 auto 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .lg-chip {
+    background: #fff; border: 1.5px solid var(--lg-border);
+    border-radius: 999px; padding: 4px 12px;
+    font-size: 11px; font-weight: 500; color: var(--lg-text-2);
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'Geist', 'Inter', sans-serif;
+  }
+  .lg-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Table shell */
+  .lg-tbl-wrap {
+    max-width: 1080px; margin: 0 auto;
+    background: #fff;
+    border: 1.5px solid var(--lg-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* Column grid — desktop */
+  .lg-thead, .lg-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0,1.6fr) 118px minmax(0,1.8fr) 136px 92px;
+    align-items: center;
+  }
+
+  /* Header */
+  .lg-thead {
+    background: #F0EEE9;
+    border-bottom: 1.5px solid var(--lg-border);
+    height: 36px;
+    padding: 0 14px;
+  }
+  .lg-th {
+    font-size: 9.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--lg-text-3);
+    font-family: 'Geist', 'Inter', sans-serif;
+  }
+  .lg-th.c { text-align: center; }
+  .lg-th.r { text-align: right; }
+
+  /* Row */
+  .lg-row {
+    min-height: 52px;
+    padding: 0 14px;
+    border-bottom: 1px solid var(--lg-border);
+    transition: background .1s;
+    position: relative;
+    animation: lgRowIn .22s ease both;
+  }
+  @keyframes lgRowIn { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:none; } }
+  .lg-row:last-child { border-bottom: none; }
+  .lg-row:hover { background: #FAFAF8; }
+  .lg-row.done-row { opacity: .38; }
+
+  /* Cell: ID */
+  .lg-cell-id {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; color: var(--lg-text-3);
+  }
+
+  /* Cell: Patient */
+  .lg-cell-pt { padding: 10px 8px 10px 0; min-width: 0; }
+  .lg-pt-name {
+    font-size: 13.5px; font-weight: 600; color: var(--lg-text-1);
+    font-family: 'Geist', 'Inter', sans-serif;
+    letter-spacing: -.01em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; line-height: 1.25;
+    text-transform: uppercase;
+  }
+  .lg-pt-links { display: flex; gap: 6px; margin-top: 4px; }
+  .lg-pt-link {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 9.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; text-decoration: none;
+    padding: 2px 7px; border-radius: 4px;
+    transition: filter .1s; font-family: 'Geist', 'Inter', sans-serif;
+  }
+  .lg-link-call { background: var(--lg-blue-bg);  color: var(--lg-blue); }
+  .lg-link-wa   { background: var(--lg-green-bg); color: var(--lg-green); }
+
+  /* Cell: Tag */
+  .lg-cell-tag { padding-right: 8px; }
+  .lg-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 9.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; padding: 4px 9px; border-radius: 999px;
+    white-space: nowrap; max-width: 110px; overflow: hidden;
+    text-overflow: ellipsis; font-family: 'Geist', 'Inter', sans-serif;
+  }
+  .lg-tag-men   { background: var(--lg-men-bg);   color: var(--lg-men-fg); }
+  .lg-tag-women { background: var(--lg-women-bg); color: var(--lg-women-fg); border: 1px solid var(--lg-women-bd); }
+  .lg-tag-other { background: var(--lg-other-bg); color: var(--lg-other-fg); border: 1px solid var(--lg-other-bd); }
+
+  /* Cell: Notes */
+  .lg-cell-notes { padding: 8px 8px 8px 0; }
+  .lg-note-ta {
+    width: 100%; background: transparent; border: none; outline: none;
+    font-family: 'Geist', 'Inter', sans-serif; font-size: 12px;
+    color: var(--lg-text-2); resize: none; padding: 4px 7px;
+    border-radius: 6px; line-height: 1.45; transition: background .1s;
+  }
+  .lg-note-ta::placeholder { color: var(--lg-text-3); }
+  .lg-note-ta:hover { background: var(--lg-bg); }
+  .lg-note-ta:focus { background: var(--lg-bg); box-shadow: 0 0 0 1.5px var(--lg-blue); }
+
+  /* Cell: Date/time */
+  .lg-cell-dt { text-align: center; padding-right: 8px; }
+  .lg-dt-date {
+    font-size: 12px; font-weight: 500; color: var(--lg-text-1);
+    display: block; white-space: nowrap; line-height: 1.3;
+    font-family: 'Geist', 'Inter', sans-serif;
+  }
+  .lg-dt-time {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; color: var(--lg-blue); font-weight: 500;
+  }
+
+  /* Cell: Actions */
+  .lg-cell-act {
+    display: flex; align-items: center;
+    justify-content: flex-end; gap: 6px;
+  }
+  .lg-chk-wrap {
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 1.5px solid var(--lg-border-mid);
+    background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .12s; flex-shrink: 0; position: relative;
+  }
+  .lg-chk-wrap input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+  .lg-chk-wrap:hover { border-color: var(--lg-blue); background: var(--lg-blue-bg); }
+  .lg-chk-wrap.checked { background: var(--lg-text-1); border-color: var(--lg-text-1); }
+  .lg-chk-mark { font-size: 12px; color: #fff; display: none; pointer-events: none; line-height: 1; }
+  .lg-chk-wrap.checked .lg-chk-mark { display: block; }
+
+  .lg-del-btn {
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 1.5px solid transparent; background: transparent;
+    cursor: pointer; display: flex; align-items: center;
+    justify-content: center; color: var(--lg-text-3); transition: all .12s;
+    flex-shrink: 0;
+  }
+  .lg-del-btn:hover { background: var(--lg-red-bg); color: var(--lg-red); border-color: #FECACA; }
+
+  /* Empty state */
+  .lg-empty {
+    padding: 48px; text-align: center;
+    font-size: 12px; font-weight: 500; color: var(--lg-text-3);
+    text-transform: uppercase; letter-spacing: .08em;
+    font-family: 'Geist', 'Inter', sans-serif;
+  }
+
+  /* ── MOBILE LEDGER  ≤ 680px ── compact 2-col list, NO cards ── */
+  @media (max-width: 680px) {
+    #view-ledger { padding: 14px 10px 60px; }
+
+    .lg-thead { display: none; }
+
+    .lg-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 10px;
+      padding: 8px 12px 32px;  /* bottom padding for abs-positioned actions */
+      min-height: unset;
+    }
+
+    /* Line 1 left: name + links */
+    .lg-cell-id   { display: none; }
+    .lg-cell-pt   { grid-column: 1; grid-row: 1; padding: 0; align-self: center; }
+    .lg-pt-name   { font-size: 13px; }
+    .lg-pt-links  { gap: 5px; margin-top: 3px; }
+    .lg-pt-link   { font-size: 9px; padding: 2px 6px; }
+
+    /* Line 1 right: tag */
+    .lg-cell-tag  { grid-column: 2; grid-row: 1; padding: 0; align-self: center; text-align: right; }
+    .lg-tag       { font-size: 8.5px; padding: 3px 7px; max-width: 88px; }
+
+    /* Line 2 left: notes */
+    .lg-cell-notes { grid-column: 1; grid-row: 2; padding: 4px 0 0; }
+    .lg-note-ta    { font-size: 11.5px; padding: 0; background: transparent !important; box-shadow: none !important; }
+
+    /* Line 2 right: date/time */
+    .lg-cell-dt   { grid-column: 2; grid-row: 2; text-align: right; padding: 4px 0 0; align-self: start; }
+    .lg-dt-date   { font-size: 10.5px; }
+    .lg-dt-time   { font-size: 10px; }
+
+    /* Actions: absolute bottom-right */
+    .lg-cell-act  { position: absolute; right: 12px; bottom: 8px; gap: 6px; }
+    .lg-chk-wrap, .lg-del-btn { width: 22px; height: 22px; border-radius: 5px; }
+  }
+
+  @media (max-width: 360px) {
+    .lg-tag     { max-width: 76px; font-size: 8px; }
+    .lg-pt-name { font-size: 12.5px; }
+  }
 </style>
 </head>
 <body>
@@ -279,7 +515,7 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
-     MAIN APP (hidden until PIN unlocked)
+     MAIN APP
 ════════════════════════════════════════════════ -->
 <div id="main-app" style="display:none">
 
@@ -298,19 +534,26 @@
     </div>
   </nav>
 
-  <!-- LEDGER VIEW -->
-  <div id="view-ledger" class="w-full px-4 sm:px-10 py-6">
-    <div class="grid grid-cols-8 sm:grid-cols-12 px-2 py-3 table-header mb-1 bg-gray-50 rounded-lg">
-      <div class="hide-mobile col-span-1">ID</div>
-      <div class="col-span-4 sm:col-span-3">Patient &amp; Contact</div>
-      <div class="col-span-3 sm:col-span-4">Treatment Notes</div>
-      <div class="hide-mobile col-span-2 text-center">Date</div>
-      <div class="col-span-1 sm:col-span-2 text-right">Edit/Done</div>
+  <!-- ── LEDGER VIEW (new design) ── -->
+  <div id="view-ledger">
+    <!-- chips/stats bar -->
+    <div class="lg-chips" id="lgChipsBar"></div>
+
+    <!-- table -->
+    <div class="lg-tbl-wrap">
+      <div class="lg-thead">
+        <div class="lg-th">#</div>
+        <div class="lg-th">Patient &amp; Contact</div>
+        <div class="lg-th">Service</div>
+        <div class="lg-th">Notes</div>
+        <div class="lg-th c">Appointment</div>
+        <div class="lg-th r">Actions</div>
+      </div>
+      <div id="ledger-grid"></div>
     </div>
-    <div id="ledger-grid"></div>
   </div>
 
-  <!-- SCHEDULE VIEW -->
+  <!-- ── SCHEDULE VIEW (unchanged) ── -->
   <div id="view-schedule" class="hidden w-full px-4 sm:px-10 py-6">
     <div class="mb-8 flex flex-wrap justify-between items-center bg-gray-50 p-4 rounded-xl border gap-4">
       <select id="monthSelect" onchange="filterSchedule()" class="border-2 border-black p-3 rounded-xl font-black uppercase text-xs">
@@ -330,10 +573,10 @@
 </div><!-- /main-app -->
 
 <!-- ════════════════════════════════════════════════
-     JAVASCRIPT ENGINE
+     JAVASCRIPT
 ════════════════════════════════════════════════ -->
 <script>
-  function formatTime12(timeStr) {
+function formatTime12(timeStr) {
   if (!timeStr) return '';
   if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
   const [h, m] = timeStr.split(':');
@@ -342,13 +585,13 @@
   hour = hour % 12 || 12;
   return `${hour}:${m} ${ampm}`;
 }
-// ── CONFIG ──────────────────────────────────────────────────────────
-// ⚠️  PASTE YOUR APPS SCRIPT WEB APP URL HERE  ⚠️
+
+// ── CONFIG ────────────────────────────────────────────────────────────
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxQskOSKWGgPDGua3taWJw1wSuRzNMLxSkuXagRboMugwQZ5DG1ccpGluFRCKHvjgpqtA/exec";
 
-// ── STATE ────────────────────────────────────────────────────────────
-let globalLedger   = [];
-let globalSchedule = [];
+// ── STATE ─────────────────────────────────────────────────────────────
+let globalLedger    = [];
+let globalSchedule  = [];
 let scheduleUpdates = [], scheduleAdds = [], scheduleDeletes = [];
 let officialTagsHTML = '<option value="All">ALL TREATMENTS</option>';
 let currentAddDate   = null;
@@ -358,72 +601,52 @@ const mNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov
 
 // ── PIN ENGINE ────────────────────────────────────────────────────────
 let pinBuffer = "";
-
 function pinPress(d) {
   if (pinBuffer.length >= 4) return;
   pinBuffer += d;
   updatePinDots();
   if (pinBuffer.length === 4) verifyPin();
 }
-
 function pinDel() {
   pinBuffer = pinBuffer.slice(0, -1);
   updatePinDots();
   document.getElementById('pinError').classList.remove('show');
 }
-
 function updatePinDots() {
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i++)
     document.getElementById('d' + i).classList.toggle('filled', i < pinBuffer.length);
-  }
 }
-
 async function verifyPin() {
-  // Disable buttons while checking
   document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = 'none');
   const errEl = document.getElementById('pinError');
-  errEl.classList.remove('show');
-  errEl.textContent = '';
-
-  // Show checking indicator
+  errEl.classList.remove('show'); errEl.textContent = '';
   const checkEl = document.createElement('div');
-  checkEl.className = 'pin-checking';
-  checkEl.id = 'pinChecking';
-  checkEl.textContent = 'Verifying...';
+  checkEl.className = 'pin-checking'; checkEl.id = 'pinChecking'; checkEl.textContent = 'Verifying...';
   document.getElementById('pin-screen').appendChild(checkEl);
-
   try {
     const res  = await fetch(`${GAS_URL}?checkPin=${pinBuffer}`);
     const data = await res.json();
-
     document.getElementById('pinChecking')?.remove();
     document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = '');
-
     if (data.isValid) {
       unlockDashboard();
     } else {
-      pinBuffer = "";
-      updatePinDots();
-      errEl.textContent = 'Incorrect PIN — Try Again';
-      errEl.classList.add('show');
-      // Shake animation
+      pinBuffer = ""; updatePinDots();
+      errEl.textContent = 'Incorrect PIN — Try Again'; errEl.classList.add('show');
       document.querySelector('.pin-pad').animate(
         [{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(-6px)'},{transform:'translateX(0)'}],
-        {duration: 300}
+        {duration:300}
       );
     }
   } catch(e) {
     document.getElementById('pinChecking')?.remove();
     document.querySelectorAll('.pin-btn').forEach(b => b.style.pointerEvents = '');
-    pinBuffer = "";
-    updatePinDots();
-    errEl.textContent = 'Network error — Check connection';
-    errEl.classList.add('show');
+    pinBuffer = ""; updatePinDots();
+    errEl.textContent = 'Network error — Check connection'; errEl.classList.add('show');
   }
 }
-
 function unlockDashboard() {
-  document.getElementById('pin-screen').style.display   = 'none';
+  document.getElementById('pin-screen').style.display    = 'none';
   document.getElementById('loading-screen').style.display = 'flex';
   loadAllData();
 }
@@ -433,33 +656,20 @@ async function gasGet(params = '') {
   const res = await fetch(`${GAS_URL}${params}`);
   return res.json();
 }
-
 async function gasPost(payload) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
+  const res = await fetch(GAS_URL, { method:'POST', body: JSON.stringify(payload) });
   return res.json();
 }
 
 async function loadAllData() {
   try {
     const data = await gasGet('?fetch=true');
-
     globalSchedule = data.slots || [];
     let unsortedLedger = data.appointments || [];
 
-    // --- NEW SORTING ENGINE ---
     globalLedger = unsortedLedger.sort((a, b) => {
-      // 1. Create sortable date objects
-      const dateA = new Date(a['Appt Date']);
-      const dateB = new Date(b['Appt Date']);
-      
-      // 2. Compare Dates first
+      const dateA = new Date(a['Appt Date']), dateB = new Date(b['Appt Date']);
       if (dateA - dateB !== 0) return dateA - dateB;
-
-      // 3. If dates are same, compare Times
-      // Helper to turn "10:00 AM" into a sortable number
       const getMinutes = (timeStr) => {
         if (!timeStr) return 0;
         const [time, modifier] = timeStr.split(' ');
@@ -469,86 +679,128 @@ async function loadAllData() {
         if (modifier === 'PM') hours += 12;
         return (hours * 60) + parseInt(minutes);
       };
-
       return getMinutes(a['Appt Time']) - getMinutes(b['Appt Time']);
     });
-    // --- END SORTING ENGINE ---
 
-    // Rest of your existing rendering code...
+    // Load tags into selects
+    if (data.settings && data.settings.services) {
+      officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' +
+        data.settings.services.map(t => `<option value="${t}">${t}</option>`).join('');
+      document.getElementById('addService').innerHTML  = officialTagsHTML;
+      document.getElementById('editService').innerHTML = officialTagsHTML;
+    }
+
     renderLedger(globalLedger);
     filterSchedule();
-    
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
-
   } catch(err) {
-    console.error("Sort failed", err);
+    console.error("Load failed", err);
   }
 }
-// ── LEDGER RENDERER ───────────────────────────────────────────────────
-// ── LEDGER RENDERER ───────────────────────────────────────────────────
-// ── LEDGER RENDERER ───────────────────────────────────────────────────
-// ── LEDGER RENDERER ───────────────────────────────────────────────────
+
+// ── LEDGER RENDERER (new compact list design) ─────────────────────────
+function lgTagClass(svc) {
+  const s = (svc || '').toLowerCase();
+  if (s.includes('women') || s.includes('female')) return 'lg-tag-women';
+  if (s.includes('men')   || s.includes('male'))   return 'lg-tag-men';
+  return 'lg-tag-other';
+}
+
+function lgRowHTML(item) {
+  const tc   = lgTagClass(item.Service);
+  const svcU = (item.Service || 'ALL').toUpperCase();
+  const esc  = s => (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+
+  return `
+<div class="lg-row" id="row-${item.rowNumber}" data-name="${esc((item.Name||'').toLowerCase())}">
+  <div class="lg-cell-id">#${item.rowNumber}</div>
+
+  <div class="lg-cell-pt">
+    <div class="lg-pt-name">${esc(item.Name || item.firstName || '—')}</div>
+    <div class="lg-pt-links">
+      <a href="tel:${esc(item.Phone)}" class="lg-pt-link lg-link-call">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.79 19.79 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11l-1.27 1.27a16 16 0 006.29 6.29l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 17z"/></svg>
+        Call
+      </a>
+      <a href="https://wa.me/91${esc(item.Phone)}" target="_blank" class="lg-pt-link lg-link-wa">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WA
+      </a>
+    </div>
+  </div>
+
+  <div class="lg-cell-tag">
+    <span class="lg-tag ${tc}">${svcU}</span>
+  </div>
+
+  <div class="lg-cell-notes">
+    <textarea class="lg-note-ta" rows="1"
+      onchange="saveNote(${item.rowNumber}, this.value)"
+      placeholder="Add notes…">${esc(item.Description || item['Description'] || '')}</textarea>
+  </div>
+
+  <div class="lg-cell-dt">
+    <span class="lg-dt-date">${esc(item['Appt Date'] || '—')}</span>
+    <span class="lg-dt-time">${formatTime12(item['Appt Time'] || '')}</span>
+  </div>
+
+  <div class="lg-cell-act">
+    <div class="lg-chk-wrap" id="cb-${item.rowNumber}"
+         onclick="markDone(${item.rowNumber})" title="Mark done">
+      <input type="checkbox" aria-label="Done">
+      <span class="lg-chk-mark">✓</span>
+    </div>
+    <button class="lg-del-btn"
+      onclick="confirmDeleteLedger(${item.rowNumber}, '${esc(item['Appt Date'])}', '${esc(item['Appt Time'])}')"
+      title="Delete" aria-label="Delete record">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+      </svg>
+    </button>
+  </div>
+</div>`;
+}
+
+function lgRenderChips(data) {
+  const total  = data.length;
+  const men    = data.filter(d => (d.Service||'').toLowerCase().includes('men') && !(d.Service||'').toLowerCase().includes('women')).length;
+  const women  = data.filter(d => (d.Service||'').toLowerCase().includes('women')).length;
+  document.getElementById('lgChipsBar').innerHTML =
+    `<span class="lg-chip"><span class="lg-chip-dot" style="background:#18170F"></span>${total} total</span>
+     <span class="lg-chip"><span class="lg-chip-dot" style="background:#18170F"></span>${men} men's</span>
+     <span class="lg-chip"><span class="lg-chip-dot" style="background:#F0ABCA"></span>${women} women's</span>`;
+}
+
 function renderLedger(data) {
+  const grid = document.getElementById('ledger-grid');
   if (!data || data.length === 0) {
-    document.getElementById('ledger-grid').innerHTML =
-      '<p style="text-align:center;padding:60px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase">No appointments found</p>';
+    grid.innerHTML = '<div class="lg-empty">No appointments found</div>';
+    lgRenderChips([]);
     return;
   }
-  document.getElementById('ledger-grid').innerHTML = data.map(item => {
-    
-    // Logic for the Service Tag (Column G)
-    const serviceName = item['Service'] || 'ALL';
-    const serviceTag = `<span style="display:inline-block;background:#f3f4f6;color:#4b5563;font-size:8px;font-weight:800;padding:1px 5px;border-radius:3px;text-transform:uppercase;margin-left:5px;border:1px solid #e5e7eb;vertical-align:middle">${serviceName}</span>`;
-
-    return `
-    <div id="row-${item.rowNumber}" class="grid grid-cols-8 sm:grid-cols-12 items-center px-2 py-5 row-item">
-      <div class="hide-mobile col-span-1 text-[10px] font-medium text-gray-300">#${item.rowNumber}</div>
-      <div class="col-span-4 sm:col-span-3 text-left">
-        <p class="text-[12px] font-bold text-gray-900 uppercase mb-1 leading-none">
-          ${item['Name'] || item['firstName'] || '—'} 
-          ${serviceTag}
-        </p>
-        <div class="flex gap-3">
-          <a href="tel:${item['Phone']}" class="text-blue-600 underline font-bold text-[9px] uppercase">Call</a>
-          <a href="https://wa.me/91${item['Phone']}" target="_blank" class="text-green-600 underline font-bold text-[9px] uppercase">WA</a>
-        </div>
-        
-        
-      </div>
-      <div class="col-span-3 sm:col-span-4 text-left">
-        <textarea
-          onchange="saveNote(${item.rowNumber}, this.value)"
-          class="w-full bg-transparent border-none text-[11px] text-gray-500 p-0"
-          rows="1"
-        >${item['Description'] || ''}</textarea>
-      </div>
-      <div class="hide-mobile col-span-2 text-center text-[10px] font-medium text-gray-600">
-        ${item['Appt Date'] || ''}<br>
-        <span class="text-[9px] text-blue-500 font-bold">${formatTime12(item['Appt Time'])}</span>
-      </div>
-      <div class="col-span-1 sm:col-span-2 flex justify-end items-center gap-3">
-        <input type="checkbox" onclick="markDone(${item.rowNumber})" class="w-4 h-4 rounded accent-black">
-        <button onclick="confirmDeleteLedger(${item.rowNumber}, '${item['Appt Date']}', '${item['Appt Time']}')" class="text-[9px] font-black text-red-400 uppercase">Del</button>
-      </div>
-    </div>`;
-  }).join('');
+  grid.innerHTML = data.map(lgRowHTML).join('');
+  lgRenderChips(data);
+  // auto-grow textareas
+  grid.querySelectorAll('.lg-note-ta').forEach(ta => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  });
 }
-
-
 
 // ── SCHEDULE RENDERER ─────────────────────────────────────────────────
 function filterSchedule() {
-  const mIdx  = parseInt(document.getElementById('monthSelect').value);
-  const year  = new Date().getFullYear();
-  const days  = new Date(year, mIdx + 1, 0).getDate();
-  let html    = '';
+  const mIdx = parseInt(document.getElementById('monthSelect').value);
+  const year = new Date().getFullYear();
+  const days = new Date(year, mIdx + 1, 0).getDate();
+  let html   = '';
 
   for (let d = 1; d <= days; d++) {
-    const dObj   = new Date(year, mIdx, d);
-    const dName  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dObj.getDay()];
-    const dStr   = `${d} ${mNames[mIdx]} ${year}`;
-
+    const dObj  = new Date(year, mIdx, d);
+    const dName = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dObj.getDay()];
+    const dStr  = `${d} ${mNames[mIdx]} ${year}`;
     const slots  = globalSchedule.filter(s => s.date === dStr && !scheduleDeletes.includes(s.rowNumber));
     const drafts = scheduleAdds.filter(s => s.date === dStr);
 
@@ -566,31 +818,25 @@ function filterSchedule() {
           </select>
         </div>
       </div>
-     <div class="grid grid-cols-2 gap-3 flex-grow">
-  ${slots.map(s => {
-    const up = scheduleUpdates.find(u => u.row === s.rowNumber);
-    const st = up ? up.status : s.status;
-    const sv = up ? up.service : s.service;
-    
-    // Select the time from the update draft if it exists, otherwise use the original
-    const rawTime = up ? up.time : s.time;
-    
-    const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
-    
-    return `<div onclick="openEditModal(${s.rowNumber},'${rawTime}','${st}','${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
-      <p class="text-[11px] font-black uppercase">${formatTime12(rawTime)}</p>
-      <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
-    </div>`;
-  }).join('')}
-  
-  ${drafts.map(ds => `
-    <div class="slot-card is-draft state-available">
-       <p class="text-[11px] font-black uppercase">${formatTime12(ds.time)}</p>
-       <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
-    </div>`).join('')}
-    
-  ${slots.length + drafts.length === 0 ? '<p class="col-span-2 text-[9px] text-gray-300 font-bold uppercase text-center py-4">No Slots</p>' : ''}
-</div>
+      <div class="grid grid-cols-2 gap-3 flex-grow">
+        ${slots.map(s => {
+          const up = scheduleUpdates.find(u => u.row === s.rowNumber);
+          const st = up ? up.status  : s.status;
+          const sv = up ? up.service : s.service;
+          const rawTime = up ? up.time : s.time;
+          const cl = st === 'Available' ? 'state-available' : st === 'Booked' ? 'state-booked' : 'state-blocked';
+          return `<div onclick="openEditModal(${s.rowNumber},'${rawTime}','${st}','${sv}')" class="slot-card ${cl} ${up ? 'is-draft' : ''}">
+            <p class="text-[11px] font-black uppercase">${formatTime12(rawTime)}</p>
+            <p class="text-[8px] mt-1 font-bold uppercase truncate ${st === 'Available' ? 'text-gray-500' : 'text-white/80'}">${sv || 'ALL'}</p>
+          </div>`;
+        }).join('')}
+        ${drafts.map(ds => `
+          <div class="slot-card is-draft state-available">
+            <p class="text-[11px] font-black uppercase">${formatTime12(ds.time)}</p>
+            <p class="text-[8px] mt-1 font-bold uppercase truncate text-blue-600">${ds.service || 'ALL'}</p>
+          </div>`).join('')}
+        ${slots.length + drafts.length === 0 ? '<p class="col-span-2 text-[9px] text-gray-300 font-bold uppercase text-center py-4">No Slots</p>' : ''}
+      </div>
     </div>`;
   }
   document.getElementById('schedule-content').innerHTML = html;
@@ -605,8 +851,7 @@ function tagEntireDay(dateStr, serviceName) {
     scheduleUpdates.push({ row: s.rowNumber, time: s.time, status: s.status, service: serviceName });
   });
   scheduleAdds.forEach(a => { if (a.date === dateStr) a.service = serviceName; });
-  filterSchedule();
-  checkSaveStatus();
+  filterSchedule(); checkSaveStatus();
 }
 
 // ── ADD SLOT ──────────────────────────────────────────────────────────
@@ -615,7 +860,6 @@ function openAddModal(d) {
   document.getElementById('addService').value = "All";
   document.getElementById('addModal').style.display = 'flex';
 }
-
 function saveBulkAdd() {
   const h = document.getElementById('addH').value;
   const m = document.getElementById('addM').value;
@@ -641,7 +885,6 @@ function openEditModal(row, time, status, service) {
   if (!sSelect.value) sSelect.value = "All";
   document.getElementById('editModal').style.display = 'flex';
 }
-
 function saveSlotEdit() {
   const h  = document.getElementById('editH').value;
   const m  = document.getElementById('editM').value;
@@ -652,7 +895,6 @@ function saveSlotEdit() {
   scheduleUpdates.push({ row: currentEditingRow, status: st, time: `${h}:${m} ${p}`, service: sv });
   filterSchedule(); checkSaveStatus(); closeModals();
 }
-
 function deleteSlotAction() {
   if (!scheduleDeletes.includes(currentEditingRow)) scheduleDeletes.push(currentEditingRow);
   filterSchedule(); checkSaveStatus(); closeModals();
@@ -660,7 +902,6 @@ function deleteSlotAction() {
 
 // ── BULK COPY ─────────────────────────────────────────────────────────
 function openCopyModal() { document.getElementById('copyModal').style.display = 'flex'; }
-
 function executeBulkCopy() {
   const srcM      = parseInt(document.getElementById('copySourceMonth').value);
   const srcD      = parseInt(document.getElementById('copySourceDay').value);
@@ -676,7 +917,6 @@ function executeBulkCopy() {
     const weekNum = Math.ceil(d / 7);
     if (skipDays.includes(dObj.getDay())) continue;
     if (tarRange !== 'month' && parseInt(tarRange) !== weekNum) continue;
-
     let pattern = [];
     if (srcD) {
       pattern = globalSchedule.filter(s => s.date === `${srcD} ${mNames[srcM]} ${year}`);
@@ -695,11 +935,10 @@ async function applySchedulerChanges() {
   btn.disabled = true;
   document.getElementById('syncText').innerText = "⏳ SAVING...";
   try {
-    await gasPost({ action: 'batchSchedule', updates: scheduleUpdates, adds: scheduleAdds, slotDeletes: scheduleDeletes });
+    await gasPost({ action:'batchSchedule', updates:scheduleUpdates, adds:scheduleAdds, slotDeletes:scheduleDeletes });
     scheduleUpdates = []; scheduleAdds = []; scheduleDeletes = [];
     checkSaveStatus();
     document.getElementById('syncText').innerText = "✅ Saved!";
-    // Reload fresh data silently
     const data = await gasGet('?fetch=true');
     globalSchedule = data.slots || [];
     globalLedger   = data.appointments || [];
@@ -713,15 +952,18 @@ async function applySchedulerChanges() {
 }
 
 // ── LEDGER ACTIONS ────────────────────────────────────────────────────
-function markDone(n) { document.getElementById(`row-${n}`).classList.toggle('done-row'); }
+function markDone(n) {
+  document.getElementById(`row-${n}`).classList.toggle('done-row');
+  document.getElementById(`cb-${n}`)?.classList.toggle('checked');
+}
 
 async function saveNote(row, value) {
-  await gasPost({ action: 'updateNote', rowNumber: row, value: value });
+  await gasPost({ action:'updateNote', rowNumber:row, value:value });
 }
 
 async function confirmDeleteLedger(row, date, time) {
   if (!confirm(`Delete patient record #${row}?\nDate: ${date} ${time}`)) return;
-  await gasPost({ action: 'deleteAppt', rowNumber: row, date, time });
+  await gasPost({ action:'deleteAppt', rowNumber:row, date, time });
   globalLedger = globalLedger.filter(i => i.rowNumber !== row);
   renderLedger(globalLedger);
 }
@@ -732,13 +974,8 @@ async function createNewTag() {
   const btn   = document.getElementById('addTagBtn');
   const val   = input.value.trim();
   if (!val) return;
-
-  btn.innerText  = "SAVING...";
-  btn.disabled   = true;
-
-  await gasPost({ action: 'addTag', newTag: val });
-
-  // Refresh tags
+  btn.innerText = "SAVING..."; btn.disabled = true;
+  await gasPost({ action:'addTag', newTag:val });
   const data = await gasGet('?fetch=true');
   if (data.settings && data.settings.services) {
     officialTagsHTML = '<option value="All">ALL TREATMENTS</option>' +
@@ -746,26 +983,22 @@ async function createNewTag() {
     document.getElementById('addService').innerHTML  = officialTagsHTML;
     document.getElementById('editService').innerHTML = officialTagsHTML;
   }
-  input.value   = "";
-  btn.innerText = "Add Tag";
-  btn.disabled  = false;
+  input.value = ""; btn.innerText = "Add Tag"; btn.disabled = false;
   filterSchedule();
 }
 
 // ── PATIENT VIEW WINDOW ───────────────────────────────────────────────
 function openViewModal() { document.getElementById('viewModal').style.display = 'flex'; }
-
 function selectViewMode(mode) {
   selectedMode = mode;
   document.querySelectorAll('.view-option').forEach(opt => opt.classList.remove('selected'));
   document.getElementById('opt-' + mode).classList.add('selected');
   document.getElementById('customInputs').classList.toggle('hidden', mode !== 'custom');
 }
-
 async function applyVisibility() {
   const start = document.getElementById('customStart').value;
   const end   = document.getElementById('customEnd').value;
-  await gasPost({ action: 'updateWindow', mode: selectedMode, start, end });
+  await gasPost({ action:'updateWindow', mode:selectedMode, start, end });
   alert("Visibility Updated Successfully!");
   closeModals();
 }
@@ -774,14 +1007,12 @@ async function applyVisibility() {
 function closeModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
 }
-
 function checkSaveStatus() {
-  const t = scheduleUpdates.length + scheduleAdds.length + scheduleDeletes.length;
+  const t   = scheduleUpdates.length + scheduleAdds.length + scheduleDeletes.length;
   const btn = document.getElementById('syncBtn');
   btn.classList.toggle('hidden', t === 0);
   document.getElementById('syncText').innerText = `💾 Sync ${t} Change${t !== 1 ? 's' : ''}`;
 }
-
 function switchView(v) {
   sessionStorage.setItem('activeTab', v);
   document.getElementById('view-ledger').classList.toggle('hidden', v !== 'ledger');
@@ -792,14 +1023,20 @@ function switchView(v) {
   document.getElementById('tab-schedule').classList.toggle('active', v === 'schedule');
   document.getElementById('searchInput').style.display = v === 'ledger' ? '' : 'none';
 }
-
 function filterList() {
   const q = document.getElementById('searchInput').value.toLowerCase();
-  document.querySelectorAll('.row-item').forEach(r => {
-    const name = r.querySelector('p')?.innerText.toLowerCase() || '';
-    r.style.display = name.includes(q) ? '' : 'none';
+  document.querySelectorAll('.lg-row').forEach(r => {
+    r.style.display = (r.dataset.name || '').includes(q) ? '' : 'none';
   });
 }
+
+// ── TEXTAREA AUTO-GROW ────────────────────────────────────────────────
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('lg-note-ta')) {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight + 'px';
+  }
+});
 
 // Close modals on backdrop click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
